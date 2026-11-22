@@ -34,7 +34,10 @@ public class LightningHandler extends RenderType {
                 .setTextureState(new RenderStateShard.TextureStateShard(resourceLocation, false, false))
                 .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
                 .createCompositeState(true);
-        return create("mek_flame", DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS, 256, true, false, state);
+        // Mekanism's RenderFlame writes vertices as position, color, texture. Asek3's branch declared POSITION_TEX_COLOR here,
+        // which crashes with "Not filled all elements of the vertex" when a flame is rendered. The Mekalus fork fixed this by
+        // using POSITION_COLOR_TEX for the render type (the ShaderKey entries keep POSITION_TEX_COLOR).
+        return create("mek_flame", DefaultVertexFormat.POSITION_COLOR_TEX, VertexFormat.Mode.QUADS, 256, true, false, state);
     });
 
     public static final RenderType MEKASUIT = create("mekasuit", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 131_072, true, false,
