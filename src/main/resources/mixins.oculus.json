@@ -54,6 +54,7 @@
     "entity_render_context.MixinElytraLayer",
     "entity_render_context.MixinRenderFlame",
     "entity_render_context.MixinRenderMekasuit",
+    "flywheel.WorldAttachedMixin",
     "entity_render_context.MixinEntityRenderDispatcher",
     "entity_render_context.MixinHorseArmorLayer",
     "entity_render_context.MixinHumanoidArmorLayer",
