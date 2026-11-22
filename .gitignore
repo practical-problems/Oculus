@@ -31,3 +31,6 @@ bin/
 # fabric
 
 run/
+
+# local compile-only jars (Distant Horizons)
+libs/

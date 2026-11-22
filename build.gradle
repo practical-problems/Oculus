@@ -47,15 +47,21 @@ dependencies {
 	forge "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 	
 	modCompileOnly "maven.modrinth:rubidium:0.6.2c"
-	modCompileOnly "maven.modrinth:distanthorizons:2.0.0-a-1.19.2"
+	// DH 3.3.3 for 1.19.2: drop DistantHorizons-3.3.3-1.19.2-fabric-forge.jar into ./libs (git-ignored).
+	// compileOnly (not modCompileOnly): we only need DH's own interfaces, and the jar is a merged fabric+forge build.
+	compileOnly files("libs/DistantHorizons-3.3.3-1.19.2-fabric-forge.jar")
 	//modCompileOnly "me.jellysquid.mods:Rubidium:0.6.3"
 }
 
+// mods.toml version shown in the launcher's mod list. DH checks it against its [1.8.0,) dependency,
+// so it starts with 1.8.0. The jar file name uses mod_version instead.
+def modLabel = project.findProperty("mod_label") ?: project.version
+
 processResources {
-	inputs.property "version", project.version
+	inputs.property "version", modLabel
 
 	filesMatching("META-INF/mods.toml") {
-        expand "version": project.version
+        expand "version": modLabel
     }
 }
 
