@@ -61,10 +61,22 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 	@Override
 	public VertexConsumer getBuffer(RenderType renderType) {
+		// Fail here rather than later in endBatch (Asek3/Oculus#874): a null type would otherwise sit in the render order
+		// and crash during drawing with a stack trace that only shows Oculus, not the caller that passed it.
+		if (renderType == null) {
+			throw new IllegalArgumentException("MultiBufferSource.getBuffer was called with a null RenderType; "
+				+ "the caller in this stack trace passed it");
+		}
+
 		removeReady();
 
 		if (wrappingFunction != null) {
-			renderType = wrappingFunction.apply(renderType);
+			RenderType wrapped = wrappingFunction.apply(renderType);
+			if (wrapped == null) {
+				throw new IllegalStateException("RenderType wrapping function " + wrappingFunction.getClass().getName()
+					+ " returned null for " + renderType);
+			}
+			renderType = wrapped;
 		}
 
 		renderOrderManager.begin(renderType);
