@@ -18,7 +18,7 @@ get LOD depth, DH programs, uniforms and shadows, like the real Oculus 1.8.0 on 
   `NewWorldRenderingPipeline` creates that framebuffer as a gbuffer FBO on colortex0 only. LODs are therefore composited into
   colortex0 with no depth, no DH programs, no DH uniforms/macros. That is the whole gap.
 
-## Branch and status (`stacia-dh-merge`)
+## Branch and status (`dh-shadow`, on top of `dh-fallback-copy` and `stacia-dh-merge`)
 Builds with JDK 17 and was tested in game (Complementary Reimagined + Euphoria Patches, DH 3.3.3). Not yet tested: Create contraptions with shaders.
 Working: LODs with shaders on/off, pack sees LOD depth (clouds/fog behind LODs), smaller chunk/LOD seam, no underground light leak,
 MekaSuit, Mekanism flamethrower. Commits, oldest first:
@@ -35,6 +35,19 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
 6. Fallback (`MixinDHCopyShader` + `NewWorldRenderingPipeline.getDhFallbackFramebufferId()`): when the pack has no `dh_terrain` the integration
    is off, so redirect DH's `GlDhCopyShader_forge.renderToFrameBuffer` target into a colortex0 gbuffer FBO (Teqed's original behaviour).
    Only active when `DHCompat.isActive()` is false. Not yet tested with a pack lacking DH programs.
+7. `dh_shadow` (branch `dh-shadow`): `ProgramSet.getDhShadow()`, shadow `ProgramState` in `IrisLodRenderProgram` (shadow samplers/images,
+   sun matrices from `ShadowRenderer.PROJECTION`/`MODELVIEW`), shadow-map FBO via `NewWorldRenderingPipeline.createDHShadowFramebuffer`,
+   `DhFrameBufferWrapper` returns it in the shadow pass, `MixinDHShadowPassGuard` only cancels when there is no shadow program,
+   `MixinDHFramebufferClear` never clears the shadow map. Honours `dhShadow.enabled`; log says "LOD shadows enabled/off".
+   Tested with Bliss v2.1.2 (DH shadowmap option): LODs block Bliss's light shafts and cast shadows near the LOD edge.
+8. `shaders.properties` macro fix: the 1.6 base text-replaced every standard macro, erasing empty flags (`IS_IRIS`, `DISTANT_HORIZONS`)
+   and turning `#ifndef PPT_NONE` into `#ifndef 0`. Broke Bliss (no dh_terrain -> warped sky, hidden DH shadowmap option), Photon and
+   Euphoria's DH block. Now: replacements only on value lines, whole words, empty flags skipped, and all names passed to the preprocessor.
+9. `dhRenderDistance`/`dhNearPlane`/`dhFarPlane` moved to `generalCommonUniforms` so properties expressions see them (Photon was black).
+10. `shadowNearPlane`/`shadowFarPlane` (Iris 1.7+): the base hard-coded the shadow depth range to 0.05..256, clipping distant LODs from the
+   shadow map. -1 resolves to +/- DH render distance (old values without DH); `shadowProjection` uniform uses the same matrix.
+   Pushed 2026-11-22, NOT yet built or tested in game.
+Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
 - **DH 2.3.x crash:** the old `MixinDHApplyShader` redirected `getTargetFrameBuffer()` inside `onRender`; DH 2.3.3 moved it to
@@ -67,12 +80,14 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
 
 ## What is missing (remaining backport)
 Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are done via the PolarBearEs merge. Still to do:
-1. **`dh_shadow` / LOD shadows.** Today DH is cancelled in the shadow pass. Real 1.8.0 lets DH render into the shadow map when the pack has a
-   `dh_shadow` program (`shouldOverrideShadow`, `DhApiBeforeRenderEvent` cancel logic in `LodRendererEvents`); then narrow `MixinDHShadowPassGuard`.
+1. **`dh_shadow` follow-ups.** Done (commit 7), remaining: confirm the near/far plane fix (commit 10) shows far LOD shadows in Bliss; caves
+   still dark with Bliss DH shadowmap on; shadow-pass culling for LODs (DH uses never-cull, so cost does not depend on shadow distance).
 2. **Generic rendering (DH clouds/beacons):** `IrisGenericRenderProgram`, `DhApiBeforeGenericObjectRenderEvent`,
    `DhApiBeforeGenericRenderSetupEvent`, `DHGenericTransformer`. Until then, turn DH's own cloud rendering off in DH config.
 3. The four DH frustum mixins from real 1.8.0 (`AdvancedShadowCullingFrustum`, `BoxCullingFrustum`, `CullEverythingFrustum`,
-   `NonCullingFrustum`), then test Proton/Bliss/Photon.
+   `NonCullingFrustum`), then test Proton.
+4. Small: `program.X.enabled = A && B` is read as one option name (Bliss logs "unknown option ... defaulting to true"); DH logs a
+   deprecated-config-API warning for `enableSsao`/`enableDhFog` set by `DHCompat`.
 Do not port the whole Iris 1.7 refactor (package `net.irisshaders`). Port only DH pieces, adapted to `net.coderbot.iris` classes.
 See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 3.3.3, so its DH-facing code is API-compatible.
 
@@ -86,7 +101,9 @@ See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 
 ## Test checklist (the user tests on a backup world)
 - Loads to the main menu and into the world with DH 3.3.3 and Complementary Reimagined / Euphoria Patches.
 - LODs visible with shaders on and off; no underground light leak; MekaSuit renders; Mekanism flamethrower does not crash.
-- Known gaps: LODs cast no shadows; DH clouds/beacons unsupported (disable DH cloud rendering).
+- Known gaps: LOD shadows only with packs that ship `dh_shadow` (Bliss with its DH shadowmap option); DH clouds/beacons unsupported
+  (disable DH cloud rendering).
+- LOD shadow test: render distance 4, a tall LOD object between you and a low sun, on/off shots from the same view after chunks settle.
 - Keep exactly one Oculus jar enabled. DH config resets are fine. Generation of the DH database takes hours and lowers FPS meanwhile.
 
 ## Rules
