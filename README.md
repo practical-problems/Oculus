@@ -32,8 +32,9 @@ Euphoria can see LOD depth.
 
 **LOD shadows (preliminary):** when a pack ships a `dh_shadow` program and doesn't disable it (`dhShadow.enabled`), LODs are drawn
 into the shadow map using the sun's matrices. Only Bliss does this among the packs tested (turn on its "DH shadowmap support" option);
-Complementary, Euphoria and Photon turn LOD shadows off themselves. Known limits: no culling of LODs in the shadow pass yet (cost does
-not depend on shadow distance). With `shadowNearPlane`/`shadowFarPlane = -1` the shadow depth range covers the full DH render distance
+Complementary, Euphoria and Photon turn LOD shadows off themselves. LODs that cannot cast a shadow into view are skipped in the
+shadow pass (about half of them when facing the sun or looking sideways, roughly 10-15% more FPS in Bliss; DH's "Disable Shadow Pass
+Frustum Culling" option turns this off). With `shadowNearPlane`/`shadowFarPlane = -1` the shadow depth range covers the full DH render distance
 (same as real Oculus 1.8.0); far LOD shadows in Bliss still look faint, most likely due to Bliss's experimental DH shadowmap mode.
 
 **Shader packs without DH support** (no `dh_terrain`, e.g. Sildur's Vibrant 1.41) hide LODs while they are active; switching to a
@@ -47,7 +48,7 @@ game in that mod's vertex writer (its bug, not Oculus's).
 with shaders, because DH classifies them as illuminated; add them to DH's ignored-blocks list. DH's own clouds clash with pack clouds;
 turn DH cloud rendering off.
 
-Not implemented yet: generic rendering (DH clouds/beacons; turn DH's own cloud rendering off) and DH frustum culling for shadows.
+Not implemented yet: generic rendering (DH clouds/beacons; turn DH's own cloud rendering off).
 Backporting the rest of the real Oculus 1.8.0 DH support is ongoing.
 
 ### Changes
@@ -59,6 +60,8 @@ Backporting the rest of the real Oculus 1.8.0 DH support is ongoing.
   instead of drawing them into a buffer the pack uses for something else.
 - `dh_shadow` support (preliminary): DH shadow program and shadow-map framebuffer, sun matrices, no clearing of the shadow map by DH,
   `dhShadow.enabled`, and `shadowNearPlane`/`shadowFarPlane` (Iris 1.7+) so distant LODs fit in the shadow map.
+- Shadow-pass LOD culling: DH culls LOD sections against Oculus's shadow frustum (same rules as Oculus 1.8.0), with the frustum's
+  far plane extended to DH's render distance so distant LOD shadows are kept.
 - Fixes for packs written for Iris 1.7+: `shaders.properties` no longer has `IS_IRIS`/`DISTANT_HORIZONS` erased or `#ifndef` lines
   broken by text replacement (this broke Bliss, Photon and parts of Euphoria), and `dhRenderDistance`/`dhNearPlane`/`dhFarPlane`
   are visible to `shaders.properties` expressions (Photon rendered black without it).

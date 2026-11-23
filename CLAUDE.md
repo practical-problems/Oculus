@@ -75,6 +75,10 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    Nearby shadows (newest build, vanilla near plane, Bliss shadow distance 64 chunks): DH shadowmap on vs off at noon and at time 11000 facing away from the sun match
    (player shadow present); only blurrier with it on (one map over 2048 blocks). Good LOD shadow test from the user: fly ~25 blocks up so
    the area below is drawn as LODs; shadowmap on vs off differs only by added shadows (hills, trees, the tower), none removed.
+   Pack switches Bliss -> Photon -> Bliss (twice): culling rebinds (79/184 facing the sun before and after), Photon logs LOD shadows off.
+   DH render distance 128 -> 64 -> 128 in-world: 184 -> 142 sections (62/142 in shadow) -> 184 (80/184); log clean, no culling errors.
+   Photon always logs "null:0:0: error: #endif without #if" from the JCPP preprocessor (INFO level, every build, Photon renders fine);
+   its .properties files have balanced #if/#endif on HEAD, so it is probably a v1.3b file. Not investigated further.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
