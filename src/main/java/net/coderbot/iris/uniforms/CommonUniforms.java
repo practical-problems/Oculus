@@ -60,12 +60,11 @@ public final class CommonUniforms {
 
 	// Needs to use a LocationalUniformHolder as we need it for the common uniforms
 	public static void addDynamicUniforms(DynamicUniformHolder uniforms, FogMode fogMode) {
-		uniforms.uniform1i(PER_FRAME, "dhRenderDistance", DHCompatBridge::getRenderDistance)
-            .uniformMatrixFromArray(PER_FRAME, "dhProjection", DHCompatBridge::getProjection)
+		// dhRenderDistance / dhNearPlane / dhFarPlane live in generalCommonUniforms so that custom
+		// uniforms in shaders.properties can use them (Photon: combined_far = dhRenderDistance).
+		uniforms.uniformMatrixFromArray(PER_FRAME, "dhProjection", DHCompatBridge::getProjection)
             .uniformMatrixFromArray(PER_FRAME, "dhProjectionInverse", DHCompatBridge::getProjectionInverse)
-            .uniformMatrixFromArray(PER_FRAME, "dhPreviousProjection", DHCompatBridge::getPreviousProjection)
-            .uniform1f(PER_FRAME, "dhNearPlane", (net.coderbot.iris.gl.uniform.FloatSupplier) DHCompatBridge::getNearPlane)
-            .uniform1f(PER_FRAME, "dhFarPlane", (net.coderbot.iris.gl.uniform.FloatSupplier) DHCompatBridge::getFarPlane);
+            .uniformMatrixFromArray(PER_FRAME, "dhPreviousProjection", DHCompatBridge::getPreviousProjection);
 		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
 		FogUniforms.addFogUniforms(uniforms, fogMode);
 		IrisInternalUniforms.addFogUniforms(uniforms, fogMode);
@@ -133,6 +132,11 @@ public final class CommonUniforms {
 
 	public static void generalCommonUniforms(UniformHolder uniforms, FrameUpdateNotifier updateNotifier, PackDirectives directives) {
 		ExternallyManagedUniforms.addExternallyManagedUniforms117(uniforms);
+
+		// Same place as real Oculus 1.8.0: visible to GLSL and to shaders.properties expressions.
+		uniforms.uniform1i(PER_FRAME, "dhRenderDistance", DHCompatBridge::getRenderDistance)
+			.uniform1f(PER_FRAME, "dhNearPlane", (net.coderbot.iris.gl.uniform.FloatSupplier) DHCompatBridge::getNearPlane)
+			.uniform1f(PER_FRAME, "dhFarPlane", (net.coderbot.iris.gl.uniform.FloatSupplier) DHCompatBridge::getFarPlane);
 
 		SmoothedVec2f eyeBrightnessSmooth = new SmoothedVec2f(directives.getEyeBrightnessHalfLife(), directives.getEyeBrightnessHalfLife(), CommonUniforms::getEyeBrightness, updateNotifier);
 

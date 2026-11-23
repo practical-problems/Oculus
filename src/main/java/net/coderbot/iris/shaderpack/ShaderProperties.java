@@ -111,22 +111,55 @@ public class ShaderProperties {
 		// empty
 	}
 
-	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
-	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines, Iterable<StringPair> replacements) {
+	/**
+	 * Substitutes Iris constants (BIOME_PLAINS, CAT_DESERT, PPT_RAIN, ...) into the value lines of
+	 * shaders.properties, which the preprocessor never expands, so custom uniform expressions can use them.
+	 * <p>
+	 * The old version replaced plain substrings everywhere, which broke packs written for Iris 1.7+:
+	 * empty flag macros were erased (`#if defined DISTANT_HORIZONS && defined IS_IRIS` became
+	 * `#if defined  && defined `, dropping Bliss's dh_terrain/dh_water), `#ifndef PPT_NONE` became
+	 * `#ifndef 0` (Photon), and option names were mangled (DISTANT_HORIZONS_SHADOWMAP -> _SHADOWMAP).
+	 * Now: directive lines are left alone, empty-valued flags are skipped, and only whole words match.
+	 */
+	private static String applyReplacements(String contents, Iterable<StringPair> replacements) {
+		List<java.util.regex.Pattern> patterns = new ArrayList<>();
+		List<String> values = new ArrayList<>();
 		for (StringPair pair : replacements) {
-			// Flag macros (IS_IRIS, DISTANT_HORIZONS, ...) have an empty value. A plain text replace erased
-			// them, turning `#if defined DISTANT_HORIZONS && defined IS_IRIS` into `#if defined  && defined `
-			// and silently dropping every block guarded by them (Bliss lost dh_terrain this way). They are
-			// already passed to the preprocessor as environment defines, so leave them in the text.
 			if (pair.getValue().isEmpty()) {
 				continue;
 			}
-			// Whole words only, so a macro name never rewrites part of a longer identifier.
-			contents = contents.replaceAll("\\b" + java.util.regex.Pattern.quote(pair.getKey()) + "\\b",
-				java.util.regex.Matcher.quoteReplacement(pair.getValue()));
+			patterns.add(java.util.regex.Pattern.compile("\\b" + java.util.regex.Pattern.quote(pair.getKey()) + "\\b"));
+			values.add(java.util.regex.Matcher.quoteReplacement(pair.getValue()));
 		}
 
-		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions, environmentDefines);
+		String[] lines = contents.split("\\R", -1);
+		StringBuilder out = new StringBuilder(contents.length());
+		for (int i = 0; i < lines.length; i++) {
+			String line = lines[i];
+			if (!line.trim().startsWith("#")) {
+				for (int p = 0; p < patterns.size(); p++) {
+					line = patterns.get(p).matcher(line).replaceAll(values.get(p));
+				}
+			}
+			out.append(line);
+			if (i < lines.length - 1) {
+				out.append('\n');
+			}
+		}
+		return out.toString();
+	}
+
+	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
+	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines, Iterable<StringPair> replacements) {
+		contents = applyReplacements(contents, replacements);
+
+		// The replacement names (BIOME_*, CAT_*, PPT_*, IS_IRIS, DISTANT_HORIZONS, ...) are also real
+		// preprocessor macros, as in Iris 1.7+, so #if/#ifdef lines can test them.
+		List<StringPair> preprocessorDefines = new ArrayList<>();
+		environmentDefines.forEach(preprocessorDefines::add);
+		replacements.forEach(preprocessorDefines::add);
+
+		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions, preprocessorDefines);
 
 		Properties preprocessed = new OrderBackedProperties();
 		Properties original = new OrderBackedProperties();
