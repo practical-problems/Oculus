@@ -79,6 +79,9 @@ Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Ph
 - DH vanilla fade is disabled when a shader pack is active (by DH's design) and DH TAA/AA is skipped under shader packs. Not gaps.
 - DH has its own 3D cloud renderer (config `enableCloudRendering`) that clashes with a pack's clouds; users should turn it off.
 - Old LOD data from DH 2.x shows as magenta/black checkers until DH regenerates it. Not a bug.
+- DH material IDs (`DH_BLOCK_*` 0-15) match DH 3.3.3's `EDhApiBlockMaterial`. DH's `BlockStateWrapper` falls back to `ILLUMINATED`
+  for any block with light emission > 0 that matches no earlier category, so faintly glowing modded plants (Serene Shrubbery) glow as
+  LODs in Complementary, Photon and Sildur's. DH/pack behaviour, not Oculus. Workaround: add those blocks to DH's ignored-blocks list.
 
 ## What is missing (remaining backport)
 Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are done via the PolarBearEs merge. Still to do:
@@ -101,6 +104,10 @@ See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 
 - Teqed's `1.20.1` branch is the same 1.6.9 snapshot as `1.19.2`. Not useful as a reference.
 
 ## Test checklist (the user tests on a backup world)
+Results 2026-11-23 (build `...20261123-1201`): no Oculus/DH errors; caves dark with Bliss LOD shadows on; Sildur's Vibrant 1.541 has full
+DH support; Complementary r5.10 + Euphoria 1.11.2 fine; LODs block Bliss's light shafts. Far LOD shadows NOT visible even with Bliss shadow
+distance 128 chunks: next step is the `Shadow map: distance ... depth range ...` log line (added after that build). Not yet tested: a pack
+without `dh_terrain` (LOD hiding), Oculus Flywheel Compat.
 - Loads to the main menu and into the world with DH 3.3.3 and Complementary Reimagined / Euphoria Patches.
 - LODs visible with shaders on and off; no underground light leak; MekaSuit renders; Mekanism flamethrower does not crash.
 - Known gaps: LOD shadows only with packs that ship `dh_shadow` (Bliss with its DH shadowmap option); DH clouds/beacons unsupported
