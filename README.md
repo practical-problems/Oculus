@@ -141,7 +141,7 @@ Needs JDK 17 (JDK 21+ fails to compile). Put `libs/DistantHorizons-3.3.3-1.19.2-
 - **Askadar**: the original DH version spoof.
 - **KostromDan**: the [Mekalus](https://github.com/KostromDan/Mekalus) fork (Mekanism and Flywheel fixes).
 - **PolarBearEs** and **fangyu-mc**: DH shader integration ([PolarBearEs's Oculus fork](https://github.com/PolarBearEs/Oculus/tree/1.19.2),
-  built on fangyu-mc's [oculus-dh3-compat](https://github.com/fangyu-mc/oculus-dh3-compat)).
+  built on fangyu-mc's oculus-dh3-compat, whose repository is no longer online).
 - **shuttheirprayer**: [Emberlens](https://github.com/shuttheirprayer/Emberlens) (1.20.1 Oculus fork, LGPL-3.0-only), source of the
   experimental optimizations, the `RenderTargets` depth fix and the idea for the pass timing tool. Ported code is marked
   "(Emberlens)" in comments; [BACKPORT_CANDIDATES.md](BACKPORT_CANDIDATES.md) lists each change with its Emberlens commit.
