@@ -370,10 +370,13 @@ public class ShadowRenderer {
 	private static net.coderbot.iris.vendored.joml.Matrix4f getCullingProjection() {
 		net.coderbot.iris.vendored.joml.Matrix4f projection =
 			((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML();
-		float dhFar = DHCompatBridge.getFarPlane();
-		if (!DHCompatBridge.hasShadowProgram() || dhFar <= 0.0F) {
+		// DH 3.3.3's far clip plane while Oculus is present, computed from the live DH render distance setting (as 1.8.0
+		// does) rather than taken from DH's last render, so a render distance change never leaves it a frame behind.
+		int dhBlockDistance = DHCompatBridge.getRenderDistance();
+		if (!DHCompatBridge.hasShadowProgram() || dhBlockDistance <= 0) {
 			return projection;
 		}
+		float dhFar = (float) ((dhBlockDistance + 512) * Math.sqrt(2.0));
 		return new net.coderbot.iris.vendored.joml.Matrix4f().setPerspective(projection.perspectiveFov(),
 			projection.m11() / projection.m00(), 0.05F, dhFar);
 	}

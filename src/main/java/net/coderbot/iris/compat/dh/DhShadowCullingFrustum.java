@@ -14,8 +14,11 @@ import net.minecraft.client.renderer.culling.Frustum;
  * DH's default never-cull frustum. Oculus 1.8.0 does the same by mixing IDhApiShadowCullingFrustum into its four
  * frustum classes and binding ShadowRenderer.FRUSTUM; here one wrapper looks at whichever frustum is current.
  *
- * DH calls update() and then intersects() with world block coordinates once per LOD section, after Oculus has
- * created and prepared the frustum for this frame's shadow pass.
+ * DH calls update() and then intersects() with world block coordinates once per LOD section. This relies on the order
+ * of Oculus's shadow pass: ShadowRenderer.renderShadows assigns and prepares FRUSTUM before it draws the terrain layers,
+ * and DH's shadow-pass culling only runs from that terrain draw (it is how DH knows it is in the shadow pass). If a
+ * DH version ever culled earlier, this would see the previous frame's frustum, or null after a reload (draw all).
+ * No frustum is stored here; FRUSTUM is read on every call.
  */
 public final class DhShadowCullingFrustum implements IDhApiShadowCullingFrustum {
 	private int worldMinY;
