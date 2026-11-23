@@ -72,6 +72,9 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    lit); back at 128 chunks they are blocked again. Expected, not a bug.
    Far-LOD check (rooftop facing the sun with mountains, time 1000, shadow distance 128): culling on 78/184, 146-149 FPS; off 184/184,
    131-132 FPS; screenshots pixel-identical apart from water/FPS-counter noise. 64 chunks gives the same image.
+   Nearby shadows (newest build, vanilla near plane): DH shadowmap on vs off at noon and at time 11000 facing away from the sun match
+   (player shadow present); only blurrier with it on (one map over 2048 blocks). Good LOD shadow test from the user: fly ~25 blocks up so
+   the area below is drawn as LODs; shadowmap on vs off differs only by added shadows (hills, trees, the tower), none removed.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
