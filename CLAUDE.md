@@ -70,6 +70,8 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    helps DH shadowmap with a shadow distance well below the DH distance, a rare combination, so left for later.
    With a small Bliss shadow distance (8 chunks) light shafts appear to stream out of distant LODs (outside the shadow map counts as
    lit); back at 128 chunks they are blocked again. Expected, not a bug.
+   Far-LOD check (rooftop facing the sun with mountains, time 1000, shadow distance 128): culling on 78/184, 146-149 FPS; off 184/184,
+   131-132 FPS; screenshots pixel-identical apart from water/FPS-counter noise. 64 chunks gives the same image.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
