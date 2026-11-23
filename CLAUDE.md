@@ -20,7 +20,7 @@ get LOD depth, DH programs, uniforms and shadows, like the real Oculus 1.8.0 on 
 
 ## Branch and status (`dh-shadow`, on top of `dh-fallback-copy` and `stacia-dh-merge`)
 Builds with JDK 17 and was tested in game (Complementary Reimagined + Euphoria Patches, DH 3.3.3). Create with shaders works (user-confirmed).
-Not yet tested: Oculus Flywheel Compat (`oculus-flywheel-compat-forge1.19.2+1.0.3b`, disabled in the user's pack) with this tree; it mixes into Oculus, so test it alone.
+Oculus Flywheel Compat (`oculus-flywheel-compat-forge1.19.2+1.0.3b`) tested 2026-11-23 with this tree: loads, shadows work, Photon FPS 67-81 -> 90-110 at the same spot (uncapped).
 Working: LODs with shaders on/off, pack sees LOD depth (clouds/fog behind LODs), smaller chunk/LOD seam, no underground light leak,
 MekaSuit, Mekanism flamethrower. Commits, oldest first:
 1. Mekanism MekaSuit/flame fixes ported from Asek3/Oculus `1.19.2` (`ProgramId.ShadowEntities`, `ShaderKey.MEKANISM_FLAME(+_SHADOW)`,
@@ -111,7 +111,7 @@ distance 128 chunks. The first-frame log then showed `distance 2048.0 blocks, de
 only differences: no shadow-frustum culling, pack DRAWBUFFERS instead of forced 0/1, DH's worldYOffset instead of -1000). Weak far
 shadows are most likely Bliss's experimental DH shadowmap mode (log-distorted shadow map over 2048 blocks). Definitive check would be
 Bliss + DH on real Iris. LOD hiding tested with Sildur's Vibrant v1.41 (pre-DH pack): log says LODs are hidden, none rendered, no
-garbage. Not yet tested: Oculus Flywheel Compat.
+garbage. Flywheel compat: no crash, shadows OK, Photon 67-81 -> 90-110 FPS; shaders off 190-227 (earlier single reading 246, not yet an A/B at the same spot).
 One intermittent crash on Save and Quit: `NoClassDefFoundError: DhApiWorldUnloadEvent` in DH's `SharedApi.setDhWorld` (class is in the
 jar). Not in Oculus code; suspects: Java 24 on Forge 43, Redirector/ModernFix interaction, DH bug. Watch for repeats.
 - Loads to the main menu and into the world with DH 3.3.3 and Complementary Reimagined / Euphoria Patches.
