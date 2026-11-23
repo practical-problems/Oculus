@@ -76,6 +76,7 @@ public class ShaderProperties {
 	private OptionalBoolean separateAo = OptionalBoolean.DEFAULT;
 	private OptionalBoolean voxelizeLightBlocks = OptionalBoolean.DEFAULT;
 	private OptionalBoolean separateEntityDraws = OptionalBoolean.DEFAULT;
+	private OptionalBoolean dhShadowEnabled = OptionalBoolean.DEFAULT;
 	private OptionalBoolean frustumCulling = OptionalBoolean.DEFAULT;
 	private ShadowCullState shadowCulling = ShadowCullState.DEFAULT;
 	private OptionalBoolean shadowEnabled = OptionalBoolean.DEFAULT;
@@ -161,6 +162,7 @@ public class ShaderProperties {
 			}
 
 			handleBooleanDirective(key, value, "oldHandLight", bool -> oldHandLight = bool);
+			handleBooleanDirective(key, value, "dhShadow.enabled", bool -> dhShadowEnabled = bool);
 			handleBooleanDirective(key, value, "dynamicHandLight", bool -> dynamicHandLight = bool);
 			handleBooleanDirective(key, value, "oldLighting", bool -> oldLighting = bool);
 			handleBooleanDirective(key, value, "shadowTerrain", bool -> shadowTerrain = bool);
@@ -675,6 +677,10 @@ public class ShaderProperties {
 
 	public OptionalBoolean getOldHandLight() {
 		return oldHandLight;
+	}
+
+	public OptionalBoolean getDhShadowEnabled() {
+		return dhShadowEnabled;
 	}
 
 	public OptionalBoolean getDynamicHandLight() {

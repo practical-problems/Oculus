@@ -35,6 +35,7 @@ public class PackShadowDirectives {
 	private final boolean shouldRenderEntities;
 	private final boolean shouldRenderPlayer;
 	private final boolean shouldRenderBlockEntities;
+	private final OptionalBoolean dhShadowEnabled;
 	private final ShadowCullState cullingState;
 
 	private final ImmutableList<DepthSamplingSettings> depthSamplingSettings;
@@ -85,6 +86,7 @@ public class PackShadowDirectives {
 		this.shouldRenderEntities = properties.getShadowEntities().orElse(true);
 		this.shouldRenderPlayer = properties.getShadowPlayer().orElse(false);
 		this.shouldRenderBlockEntities = properties.getShadowBlockEntities().orElse(true);
+		this.dhShadowEnabled = properties.getDhShadowEnabled();
 		this.cullingState = properties.getShadowCulling();
 		this.shadowEnabled = properties.getShadowEnabled();
 
@@ -109,6 +111,7 @@ public class PackShadowDirectives {
 		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities;
 		this.shouldRenderPlayer = shadowDirectives.shouldRenderPlayer;
 		this.shouldRenderBlockEntities = shadowDirectives.shouldRenderBlockEntities;
+		this.dhShadowEnabled = shadowDirectives.dhShadowEnabled;
 		this.cullingState = shadowDirectives.cullingState;
 		this.depthSamplingSettings = shadowDirectives.depthSamplingSettings;
 		this.colorSamplingSettings = shadowDirectives.colorSamplingSettings;
@@ -165,6 +168,11 @@ public class PackShadowDirectives {
 
 	public boolean shouldRenderBlockEntities() {
 		return shouldRenderBlockEntities;
+	}
+
+	/** dhShadow.enabled in shaders.properties; unset means "render LOD shadows if dh_shadow exists". */
+	public OptionalBoolean isDhShadowEnabled() {
+		return dhShadowEnabled;
 	}
 
 	public ShadowCullState getCullingState() {

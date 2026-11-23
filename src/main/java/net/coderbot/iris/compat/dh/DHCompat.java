@@ -72,7 +72,9 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 			return;
 		}
 
-		Optional<ProgramSource> shadowSource = pipeline.hasShadowRenderTargets() ? programs.getDhShadow() : Optional.empty();
+		boolean dhShadowEnabled = programs.getPackDirectives().getShadowDirectives().isDhShadowEnabled().orElse(true);
+		Optional<ProgramSource> shadowSource = pipeline.hasShadowRenderTargets() && dhShadowEnabled
+			? programs.getDhShadow() : Optional.empty();
 		shaderProgram = IrisLodRenderProgram.create(terrain.get(), programs.getDhWater(), shadowSource, pipeline);
 		terrainFramebuffer = pipeline.createDHFramebuffer(terrain.get(), false);
 		translucentFramebuffer = programs.getDhWater()
@@ -91,6 +93,9 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 		refreshDepthTexture();
 		applyDhConfigOverrides();
 		Iris.logger.info("Enabled Distant Horizons shader-pack GBuffer integration.");
+		Iris.logger.info(shadowFramebuffer != null
+			? "Distant Horizons LOD shadows enabled (dh_shadow)."
+			: "Distant Horizons LOD shadows off (no dh_shadow, dhShadow.enabled=false, or shadows disabled).");
 	}
 
 	private static void bindCloudEventHandler() {
