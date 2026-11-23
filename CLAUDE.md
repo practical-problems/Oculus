@@ -110,7 +110,8 @@ distance 128 chunks. The first-frame log then showed `distance 2048.0 blocks, de
 (DH render distance 128 chunks), i.e. the same as real 1.8.0, and the dh_shadow path was compared with 1.8.0 piece by piece (matches;
 only differences: no shadow-frustum culling, pack DRAWBUFFERS instead of forced 0/1, DH's worldYOffset instead of -1000). Weak far
 shadows are most likely Bliss's experimental DH shadowmap mode (log-distorted shadow map over 2048 blocks). Definitive check would be
-Bliss + DH on real Iris. Not yet tested: a pack without `dh_terrain` (LOD hiding), Oculus Flywheel Compat.
+Bliss + DH on real Iris. LOD hiding tested with Sildur's Vibrant v1.41 (pre-DH pack): log says LODs are hidden, none rendered, no
+garbage. Not yet tested: Oculus Flywheel Compat.
 One intermittent crash on Save and Quit: `NoClassDefFoundError: DhApiWorldUnloadEvent` in DH's `SharedApi.setDhWorld` (class is in the
 jar). Not in Oculus code; suspects: Java 24 on Forge 43, Redirector/ModernFix interaction, DH bug. Watch for repeats.
 - Loads to the main menu and into the world with DH 3.3.3 and Complementary Reimagined / Euphoria Patches.
