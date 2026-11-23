@@ -146,8 +146,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final CenterDepthSampler centerDepthSampler;
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
 	private final DHCompatBridge dhCompat;
-	/** Gbuffer framebuffer on colortex0, used only to composite DH's output when the pack has no DH programs. */
-	private GlFramebuffer dhFallbackFramebuffer;
 	private final ColorSpaceConverter colorSpaceConverter;
 
 	private final ImmutableSet<Integer> flippedBeforeShadow;
@@ -482,9 +480,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.shadowRenderer = null;
 		}
 
-		if (net.minecraftforge.fml.loading.FMLLoader.getLoadingModList().getModFileById("distanthorizons") != null) {
-			this.dhFallbackFramebuffer = renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[] { 0 });
-		}
 		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
@@ -1173,14 +1168,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			shader.clear();
 			shader.close();
 		});
-	}
-
-	/**
-	 * Framebuffer id that DH's copy pass should write into when the shader pack provides no DH programs,
-	 * or -1 if there is none. This is the pre-DH-integration behaviour: LODs end up in colortex0 without depth.
-	 */
-	public int getDhFallbackFramebufferId() {
-		return dhFallbackFramebuffer == null ? -1 : dhFallbackFramebuffer.getId();
 	}
 
 	public boolean hasShadowRenderTargets() {

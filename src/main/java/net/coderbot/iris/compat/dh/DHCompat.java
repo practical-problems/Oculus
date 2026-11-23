@@ -63,7 +63,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 
 		Optional<ProgramSource> terrain = programs.getDhTerrain();
 		if (!terrain.isPresent()) {
-			Iris.logger.warn("The active shader pack does not provide dh_terrain; DH shader integration is disabled.");
+			Iris.logger.warn("The active shader pack does not provide dh_terrain; Distant Horizons LODs are hidden while it is active.");
 			shaderProgram = null;
 			framebufferWrapper = null;
 			terrainFramebuffer = null;

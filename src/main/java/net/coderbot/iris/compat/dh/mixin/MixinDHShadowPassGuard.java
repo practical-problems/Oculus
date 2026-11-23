@@ -5,6 +5,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 
@@ -16,6 +17,12 @@ public class MixinDHShadowPassGuard {
 		cancellable = true
 	)
 	private void oculus$skipDhWithoutShadowProgram(CallbackInfo ci) {
+		// The pack has no dh_terrain, so nothing can draw LODs in a way it understands. Hide them rather than paste them
+		// into one of its buffers (real Oculus 1.8.0 treats such packs as incompatible). Shaders off brings them back.
+		if (Iris.isPackInUseQuick() && !DHCompat.isActive()) {
+			ci.cancel();
+			return;
+		}
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !DHCompat.hasShadowProgram()) {
 			ci.cancel();
 		}

@@ -33,7 +33,6 @@ generic rendering (DH clouds/beacons). Backporting the rest of the real Oculus 1
 - DH shader integration from PolarBearEs's `Oculus` fork (itself based on fangyu-mc's `oculus-dh3-compat`): DH programs, depth
   textures, framebuffer override, uniforms, macros, DH terrain transformer, plus mixins into DH 3.3.3 (`MixinDHApplyShader`,
   `MixinDHFramebufferClear`, `MixinDHOculusAccessor`, `MixinDHRenderPassState`, `MixinDHShadowPassGuard`).
-- Fallback for packs without DH programs (no `dh_terrain`): DH's copy pass is redirected into the pack's colortex0 (the original Oculus DH behaviour: LODs show, but with no LOD depth). Untested.
 - The shadow guard stops DH from rendering LODs during Oculus's shadow pass, which fixed light leaks and a large FPS cost.
   (This replaces our earlier `MixinDHCopyShader` and `MixinDHSkipShadowPass`.)
 - Mekanism fixes ported from Asek3's 1.19.2 branch and Mekalus: MekaSuit and flamethrower shaders, with a corrected flame vertex format.

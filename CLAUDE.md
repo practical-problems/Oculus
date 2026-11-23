@@ -33,9 +33,10 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    programs, `dhDepthTex`/`dhDepthTex1`, `dh*` uniforms (incl. projection matrices), `DISTANT_HORIZONS`/`DH_BLOCK_*` macros, DH terrain
    transformer, five DH mixins. Replaced our `DHCompat`, plugin, `MixinDHCopyShader` and `MixinDHSkipShadowPass`; removed `getDHCompat()`.
    Not taken from their commit: Loom 1.4, wrapper bump, Modrinth DH dependency, workflows.
-6. Fallback (`MixinDHCopyShader` + `NewWorldRenderingPipeline.getDhFallbackFramebufferId()`): when the pack has no `dh_terrain` the integration
-   is off, so redirect DH's `GlDhCopyShader_forge.renderToFrameBuffer` target into a colortex0 gbuffer FBO (Teqed's original behaviour).
-   Only active when `DHCompat.isActive()` is false. Not yet tested with a pack lacking DH programs.
+6. Packs without `dh_terrain`: LODs are hidden while such a pack is active (`MixinDHShadowPassGuard` cancels
+   `renderLods`/`renderDeferredLodsForShaders` when a pack is in use and `DHCompat.isActive()` is false), like real 1.8.0
+   which marks such packs incompatible. An earlier colortex0 fallback (Teqed's old behaviour) was removed: it drew LODs into
+   a buffer the pack uses for something else (Bliss showed a warped sky). Shaders off or a DH-aware pack brings LODs back.
 7. `dh_shadow` (branch `dh-shadow`): `ProgramSet.getDhShadow()`, shadow `ProgramState` in `IrisLodRenderProgram` (shadow samplers/images,
    sun matrices from `ShadowRenderer.PROJECTION`/`MODELVIEW`), shadow-map FBO via `NewWorldRenderingPipeline.createDHShadowFramebuffer`,
    `DhFrameBufferWrapper` returns it in the shadow pass, `MixinDHShadowPassGuard` only cancels when there is no shadow program,
