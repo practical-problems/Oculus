@@ -213,10 +213,14 @@ public abstract class NormalHelper {
 		float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
 		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
 		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
-		float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
-		bitangentx *= bitcoeff;
-		bitangenty *= bitcoeff;
-		bitangentz *= bitcoeff;
+		// Experimental "Skip bitangent normalize" (Emberlens): only the sign of dot(bitangent, predicted) is used
+		// below, and scaling by a positive factor does not change it.
+		if (!net.coderbot.iris.config.ExperimentalConfig.skipBitangentNormalize) {
+			float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
+			bitangentx *= bitcoeff;
+			bitangenty *= bitcoeff;
+			bitangentz *= bitcoeff;
+		}
 
 		// predicted bitangent = tangent × normal
 		// Compute the determinant of the following matrix to get the cross product
@@ -300,10 +304,14 @@ public abstract class NormalHelper {
 		float bitangentx = f * (-deltaU2 * edge1x + deltaU1 * edge2x);
 		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
 		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
-		float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
-		bitangentx *= bitcoeff;
-		bitangenty *= bitcoeff;
-		bitangentz *= bitcoeff;
+		// Experimental "Skip bitangent normalize" (Emberlens): only the sign of dot(bitangent, predicted) is used
+		// below, and scaling by a positive factor does not change it.
+		if (!net.coderbot.iris.config.ExperimentalConfig.skipBitangentNormalize) {
+			float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
+			bitangentx *= bitcoeff;
+			bitangenty *= bitcoeff;
+			bitangentz *= bitcoeff;
+		}
 
 		// predicted bitangent = tangent × normal
 		// Compute the determinant of the following matrix to get the cross product

@@ -20,6 +20,9 @@ public class PipelineManager {
 	private final Function<NamespacedId, WorldRenderingPipeline> pipelineFactory;
 	private final Map<NamespacedId, WorldRenderingPipeline> pipelinesPerDimension = new HashMap<>();
 	private WorldRenderingPipeline pipeline = new FixedFunctionWorldRenderingPipeline();
+	// Experimental "Cached pipeline lookup" (Emberlens): getPipeline() returns this instead of a new Optional.
+	// Kept in sync with every assignment to pipeline below.
+	private Optional<WorldRenderingPipeline> pipelineOptional = Optional.of(pipeline);
 	private int versionCounterForSodiumShaderReload = 0;
 
 	public PipelineManager(Function<NamespacedId, WorldRenderingPipeline> pipelineFactory) {
@@ -33,6 +36,7 @@ public class PipelineManager {
 
 			Iris.logger.info("Creating pipeline for dimension {}", currentDimension);
 			pipeline = pipelineFactory.apply(currentDimension);
+			pipelineOptional = Optional.ofNullable(pipeline);
 			pipelinesPerDimension.put(currentDimension, pipeline);
 
 			if (BlockRenderingSettings.INSTANCE.isReloadRequired()) {
@@ -44,6 +48,7 @@ public class PipelineManager {
 			}
 		} else {
 			pipeline = pipelinesPerDimension.get(currentDimension);
+			pipelineOptional = Optional.ofNullable(pipeline);
 		}
 
 		return pipeline;
@@ -55,6 +60,9 @@ public class PipelineManager {
 	}
 
 	public Optional<WorldRenderingPipeline> getPipeline() {
+		if (net.coderbot.iris.config.ExperimentalConfig.cachedPipelineLookup) {
+			return pipelineOptional;
+		}
 		return Optional.ofNullable(pipeline);
 	}
 
@@ -91,6 +99,7 @@ public class PipelineManager {
 
 		pipelinesPerDimension.clear();
 		pipeline = null;
+		pipelineOptional = Optional.empty();
 		versionCounterForSodiumShaderReload++;
 	}
 

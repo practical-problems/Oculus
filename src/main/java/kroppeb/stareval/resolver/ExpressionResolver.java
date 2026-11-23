@@ -221,17 +221,7 @@ public class ExpressionResolver {
 				log("[DEBUG] resolved variable %s to type %s", name, targetType);
 				// TODO: We should add a variable provider (and have this as default)
 				//       doing so would remove the need for a FunctionContext.
-				return new VariableExpression() {
-					@Override
-					public void evaluateTo(FunctionContext c, FunctionReturn r) {
-						c.getVariable(name).evaluateTo(c, r);
-					}
-
-					@Override
-					public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
-						return context.hasVariable(name)?context.getVariable(name):this;
-					}
-				};
+				return new NamedVariable(name);
 			}
 			if (!allowImplicit) {
 				log("[DEBUG] failed to resolve variable %s (of type %s) to type %s without implicit casts",
@@ -239,17 +229,7 @@ public class ExpressionResolver {
 				return null;
 			}
 			// TODO duplicate of above
-			castable = new VariableExpression() {
-				@Override
-				public void evaluateTo(FunctionContext c, FunctionReturn r) {
-					c.getVariable(name).evaluateTo(c, r);
-				}
-
-				@Override
-				public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
-					return context.hasVariable(name)?context.getVariable(name):this;
-				}
-			};
+			castable = new NamedVariable(name);
 			innerType = type;
 		} else {
 			throw new RuntimeException("unexpected token: " + expression.toString());
@@ -317,5 +297,40 @@ public class ExpressionResolver {
 				throw exception;
 			}
 		});
+	}
+
+	/**
+	 * A reference to a named variable. With the experimental "Cached uniform lookups" option (Emberlens) it remembers
+	 * what the name resolved to for the last context; otherwise it looks the name up on every evaluation, as before.
+	 */
+	private static final class NamedVariable implements VariableExpression {
+		private final String name;
+		private FunctionContext boundContext;
+		private Expression bound;
+
+		private NamedVariable(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public void evaluateTo(FunctionContext c, FunctionReturn r) {
+			if (!net.coderbot.iris.config.ExperimentalConfig.cachedUniformLookups) {
+				c.getVariable(this.name).evaluateTo(c, r);
+				return;
+			}
+
+			Expression target = this.bound;
+			if (target == null || this.boundContext != c) {
+				target = c.getVariable(this.name);
+				this.bound = target;
+				this.boundContext = c;
+			}
+			target.evaluateTo(c, r);
+		}
+
+		@Override
+		public Expression partialEval(FunctionContext context, FunctionReturn functionReturn) {
+			return context.hasVariable(this.name) ? context.getVariable(this.name) : this;
+		}
 	}
 }

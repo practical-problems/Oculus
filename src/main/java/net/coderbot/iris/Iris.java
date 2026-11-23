@@ -97,6 +97,8 @@ public class Iris {
 			FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onInitializeClient);
 			FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onKeyRegister);
 			MinecraftForge.EVENT_BUS.addListener(this::onKeyInput);
+			MinecraftForge.EVENT_BUS.addListener(net.minecraftforge.eventbus.api.EventPriority.NORMAL, false,
+				net.minecraftforge.client.event.RenderGuiEvent.Post.class, net.coderbot.iris.pipeline.PassTiming::renderOverlay);
 
 			IRIS_VERSION = ModList.get().getModContainerById(MODID).get().getModInfo().getVersion().toString();
 
@@ -136,6 +138,8 @@ public class Iris {
 			logger.error("Failed to initialize Oculus configuration, default values will be used instead");
 			logger.error("", e);
 		}
+
+		net.coderbot.iris.config.ExperimentalConfig.load();
 
 		reloadKeybind = new KeyMapping("iris.keybind.reload", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "iris.keybinds");
 		toggleShadersKeybind = new KeyMapping("iris.keybind.toggleShaders", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, "iris.keybinds");

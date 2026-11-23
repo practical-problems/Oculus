@@ -870,6 +870,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 	@Override
 	public void beginLevelRendering() {
+		net.coderbot.iris.pipeline.PassTiming.frameStart();
 		isRenderingWorld = true;
 
 		// Make sure we're using texture unit 0 for this.
@@ -1028,9 +1029,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void renderShadows(LevelRendererAccessor worldRenderer, Camera playerCamera) {
 		if (shadowRenderer != null) {
+			net.coderbot.iris.pipeline.PassTiming.begin(net.coderbot.iris.pipeline.PassTiming.Pass.SHADOW);
 			this.shadowRenderer.renderShadows(worldRenderer, playerCamera);
+			net.coderbot.iris.pipeline.PassTiming.end(net.coderbot.iris.pipeline.PassTiming.Pass.SHADOW);
 		}
 
+		// "gbuffers opaque" runs from here (prepare passes, terrain, entities) to beginTranslucents.
+		net.coderbot.iris.pipeline.PassTiming.begin(net.coderbot.iris.pipeline.PassTiming.Pass.OPAQUE);
 		prepareRenderer.renderAll();
 	}
 
@@ -1069,9 +1074,14 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 
 		// We need to copy the current depth texture so that depthtex1 can contain the depth values for
 		// all non-translucent content, as required.
+		net.coderbot.iris.pipeline.PassTiming.end(net.coderbot.iris.pipeline.PassTiming.Pass.OPAQUE);
+
 		renderTargets.copyPreTranslucentDepth();
 
+		net.coderbot.iris.pipeline.PassTiming.begin(net.coderbot.iris.pipeline.PassTiming.Pass.DEFERRED);
 		deferredRenderer.renderAll();
+		net.coderbot.iris.pipeline.PassTiming.end(net.coderbot.iris.pipeline.PassTiming.Pass.DEFERRED);
+		net.coderbot.iris.pipeline.PassTiming.begin(net.coderbot.iris.pipeline.PassTiming.Pass.TRANSLUCENT);
 
 		RenderSystem.enableBlend();
 
@@ -1091,9 +1101,15 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public void finalizeLevelRendering() {
 		isRenderingWorld = false;
+		net.coderbot.iris.pipeline.PassTiming.end(net.coderbot.iris.pipeline.PassTiming.Pass.TRANSLUCENT);
+		net.coderbot.iris.pipeline.PassTiming.begin(net.coderbot.iris.pipeline.PassTiming.Pass.COMPOSITE);
 		compositeRenderer.renderAll();
+		net.coderbot.iris.pipeline.PassTiming.end(net.coderbot.iris.pipeline.PassTiming.Pass.COMPOSITE);
+		net.coderbot.iris.pipeline.PassTiming.begin(net.coderbot.iris.pipeline.PassTiming.Pass.FINAL);
 		finalPassRenderer.renderFinalPass();
 		colorSpaceConverter.process(Minecraft.getInstance().getMainRenderTarget().getColorTextureId());
+		net.coderbot.iris.pipeline.PassTiming.end(net.coderbot.iris.pipeline.PassTiming.Pass.FINAL);
+		net.coderbot.iris.pipeline.PassTiming.frameEnd();
 	}
 
 	@Override

@@ -79,6 +79,10 @@ public class MapDigraph<V> implements Digraph<V> {
 			@Override
 			public Map<V, Object2IntMap<V>> create() {
 				if (comparator == null) {
+					// Experimental "Fast ordering graph map" (Emberlens): same insertion order, no entry objects.
+					if (net.coderbot.iris.config.ExperimentalConfig.fastOrderingGraphMap) {
+						return new it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap<>(16);
+					}
 					return new LinkedHashMap<>(16);
 				} else {
 					return new TreeMap<>(comparator);

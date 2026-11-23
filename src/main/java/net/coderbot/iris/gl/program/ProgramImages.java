@@ -30,8 +30,14 @@ public class ProgramImages {
 			initializer = null;
 		}
 
-		for (ImageBinding imageBinding : imageBindings) {
-			imageBinding.update();
+		if (net.coderbot.iris.config.ExperimentalConfig.indexedLoops) {
+			for (int i = 0; i < imageBindings.size(); i++) {
+				imageBindings.get(i).update();
+			}
+		} else {
+			for (ImageBinding imageBinding : imageBindings) {
+				imageBinding.update();
+			}
 		}
 	}
 

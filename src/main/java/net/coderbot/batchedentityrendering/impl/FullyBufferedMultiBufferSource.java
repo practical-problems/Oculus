@@ -28,6 +28,10 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 	 * An LRU cache mapping RenderType objects to a relevant buffer.
 	 */
 	private final LinkedHashMap<RenderType, Integer> affinities;
+	// Experimental "Fast entity buffer list" (Emberlens): the same LRU as a fastutil map without boxed integers.
+	// Which map is used is latched once per frame in readyUp(), after both are cleared.
+	private final it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap<RenderType> fastAffinities;
+	private boolean useFastAffinities;
 	private int drawCalls;
 	private int renderTypes;
 
@@ -48,6 +52,9 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 		// use accessOrder=true so our LinkedHashMap works as an LRU cache.
 		this.affinities = new LinkedHashMap<>(32, 0.75F, true);
+		this.fastAffinities = new it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap<>(32, 0.75F);
+		this.fastAffinities.defaultReturnValue(-1);
+		this.useFastAffinities = net.coderbot.iris.config.ExperimentalConfig.fastEntityBufferList;
 
 		this.drawCalls = 0;
 		this.segmentRenderer = new BufferSegmentRenderer();
@@ -80,6 +87,16 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		}
 
 		renderOrderManager.begin(renderType);
+
+		if (useFastAffinities) {
+			int fastAffinity = fastAffinities.getAndMoveToLast(renderType);
+			if (fastAffinity == -1) {
+				fastAffinity = fastAffinities.size() < builders.length ? fastAffinities.size() : fastAffinities.removeFirstInt();
+				fastAffinities.putAndMoveToLast(renderType, fastAffinity);
+			}
+			return builders[fastAffinity].getBuffer(renderType);
+		}
+
 		Integer affinity = affinities.get(renderType);
 
 		if (affinity == null) {
@@ -132,6 +149,8 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 
 		renderOrderManager.reset();
 		affinities.clear();
+		fastAffinities.clear();
+		useFastAffinities = net.coderbot.iris.config.ExperimentalConfig.fastEntityBufferList;
 
 		profiler.pop();
 	}

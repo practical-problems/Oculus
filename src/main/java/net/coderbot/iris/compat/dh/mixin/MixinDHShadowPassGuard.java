@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.compat.dh.DHCompat;
+import net.coderbot.iris.pipeline.PassTiming;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 
 @Mixin(targets = "com.seibel.distanthorizons.core.api.internal.ClientApi", remap = false)
@@ -25,7 +26,18 @@ public class MixinDHShadowPassGuard {
 		}
 		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !DHCompat.hasShadowProgram()) {
 			ci.cancel();
+			return;
 		}
+		PassTiming.begin(ShadowRenderingState.areShadowsCurrentlyBeingRendered() ? PassTiming.Pass.DH_SHADOW : PassTiming.Pass.DH_LODS);
+	}
+
+	@Inject(
+		method = {"renderLods", "renderDeferredLodsForShaders"},
+		at = @At("RETURN")
+	)
+	private void oculus$endDhTiming(CallbackInfo ci) {
+		PassTiming.end(PassTiming.Pass.DH_SHADOW);
+		PassTiming.end(PassTiming.Pass.DH_LODS);
 	}
 
 	@Inject(

@@ -56,8 +56,14 @@ public class ProgramSamplers {
 		// in the middle of RenderType setup, bad things will happen.
 		int activeTexture = GlStateManagerAccessor.getActiveTexture();
 
-		for (SamplerBinding samplerBinding : samplerBindings) {
-			samplerBinding.update();
+		if (net.coderbot.iris.config.ExperimentalConfig.indexedLoops) {
+			for (int i = 0; i < samplerBindings.size(); i++) {
+				samplerBindings.get(i).update();
+			}
+		} else {
+			for (SamplerBinding samplerBinding : samplerBindings) {
+				samplerBinding.update();
+			}
 		}
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0 + activeTexture);

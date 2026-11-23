@@ -126,6 +126,63 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 	float[] tempFloats = new float[16];
 	float[] tempFloats2 = new float[9];
 
+	// Experimental "Matrix inverse cache" (Emberlens): inverses shared by all programs, recomputed only when the
+	// matrix changes (exact float comparison, so the values are identical to computing them every time).
+	private static final Matrix4f cachedProjection = new Matrix4f();
+	private static final float[] cachedProjectionInverse = new float[16];
+	private static final Matrix4f cachedModelView = new Matrix4f();
+	private static final float[] cachedModelViewInverse = new float[16];
+	private static final float[] cachedNormalMatrix = new float[9];
+	private static boolean hasCachedProjection;
+	private static boolean hasCachedModelView;
+
+	private void applyCachedMatrices() {
+		if (PROJECTION_MATRIX != null) {
+			if (projectionInverse != null) {
+				tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer());
+
+				if (!hasCachedProjection || !tempMatrix4f.equals(cachedProjection)) {
+					cachedProjection.set(tempMatrix4f);
+					tempMatrix4f.invert().get(cachedProjectionInverse);
+					hasCachedProjection = true;
+				}
+
+				projectionInverse.set(cachedProjectionInverse);
+			}
+		} else if (projectionInverse != null) {
+			projectionInverse.set(identity);
+		}
+
+		if (MODEL_VIEW_MATRIX != null) {
+			if (modelViewInverse != null || normalMatrix != null) {
+				tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer());
+
+				if (!hasCachedModelView || !tempMatrix4f.equals(cachedModelView)) {
+					cachedModelView.set(tempMatrix4f);
+					tempMatrix4f.invert().get(cachedModelViewInverse);
+					tempMatrix3f.set(cachedModelView).invert().transpose().get(cachedNormalMatrix);
+					hasCachedModelView = true;
+				}
+
+				if (modelViewInverse != null) {
+					modelViewInverse.set(cachedModelViewInverse);
+				}
+
+				if (normalMatrix != null) {
+					normalMatrix.set(cachedNormalMatrix);
+				}
+			}
+		} else {
+			if (modelViewInverse != null) {
+				modelViewInverse.set(identity);
+			}
+
+			if (normalMatrix != null) {
+				normalMatrix.set(identity);
+			}
+		}
+	}
+
 	@Override
 	public void apply() {
 		CapturedRenderingState.INSTANCE.setCurrentAlphaTest(alphaTest);
@@ -144,7 +201,9 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.OVERLAY_TEXTURE_UNIT, RenderSystem.getShaderTexture(1));
 		IrisRenderSystem.bindTextureToUnit(TextureType.TEXTURE_2D.getGlType(), IrisSamplers.LIGHTMAP_TEXTURE_UNIT, RenderSystem.getShaderTexture(2));
 
-		if (PROJECTION_MATRIX != null) {
+		if (net.coderbot.iris.config.ExperimentalConfig.matrixInverseCache) {
+			applyCachedMatrices();
+		} else if (PROJECTION_MATRIX != null) {
 			if (projectionInverse != null) {
 				projectionInverse.set(tempMatrix4f.set(PROJECTION_MATRIX.getFloatBuffer()).invert().get(tempFloats));
 			}
@@ -154,7 +213,9 @@ public class ExtendedShader extends ShaderInstance implements ShaderInstanceInte
 			}
 		}
 
-		if (MODEL_VIEW_MATRIX != null) {
+		if (net.coderbot.iris.config.ExperimentalConfig.matrixInverseCache) {
+			// Done in applyCachedMatrices().
+		} else if (MODEL_VIEW_MATRIX != null) {
 			if (modelViewInverse != null) {
 				modelViewInverse.set(tempMatrix4f.set(MODEL_VIEW_MATRIX.getFloatBuffer()).invert().get(tempFloats));
 			}

@@ -218,7 +218,16 @@ public class IrisRenderSystem {
 		GL45C.glBufferStorage(target, size, flags);
 	}
 
+	// Experimental "Memory barrier skip" (Emberlens): set once anything binds an image or a storage buffer, never reset
+	// (staying true only means barriers are issued again, which is the stock behaviour).
+	private static boolean usesCoherentMemory;
+
+	public static boolean usesCoherentMemory() {
+		return usesCoherentMemory;
+	}
+
 	public static void bindBufferBase(int target, Integer index, int buffer) {
+		usesCoherentMemory = true;
 		RenderSystem.assertOnRenderThreadOrInit();
 		GL43C.glBindBufferBase(target, index, buffer);
 	}
@@ -243,6 +252,7 @@ public class IrisRenderSystem {
 	}
 
 	public static void bindImageTexture(int unit, int texture, int level, boolean layered, int layer, int access, int format) {
+		usesCoherentMemory = true;
 		RenderSystem.assertOnRenderThreadOrInit();
 		if (GL.getCapabilities().OpenGL42 || GL.getCapabilities().GL_ARB_shader_image_load_store) {
 			GL42C.glBindImageTexture(unit, texture, level, layered, layer, access, format);
@@ -380,11 +390,26 @@ public class IrisRenderSystem {
 		GL33C.glBindSampler(unit, sampler);
 
 		samplers[unit] = sampler;
+
+		if (sampler != 0 && unit > highestBoundSampler) {
+			highestBoundSampler = unit;
+		}
 	}
+
+	// Experimental "Sampler unbind" (Emberlens): highest unit bound since the last unbind, and a zeroed buffer for
+	// glBindSamplers. Tracked always, used only while the option is on.
+	private static int highestBoundSampler = -1;
+	private static java.nio.IntBuffer zeroSamplers;
 
 	private static int[] emptyArray = new int[SamplerLimits.get().getMaxTextureUnits()];
 
 	public static void unbindAllSamplers() {
+		if (net.coderbot.iris.config.ExperimentalConfig.samplerUnbind) {
+			unbindAllSamplersFast();
+			return;
+		}
+
+		highestBoundSampler = -1;
 		boolean usedASampler = false;
 		for (int i = 0; i < samplers.length; i++) {
 			if (samplers[i] != 0) {
@@ -396,6 +421,32 @@ public class IrisRenderSystem {
 		if (usedASampler && hasMultibind) {
 			GL45C.glBindSamplers(0, emptyArray);
 		}
+	}
+
+	private static void unbindAllSamplersFast() {
+		if (highestBoundSampler < 0) {
+			return;
+		}
+
+		int count = highestBoundSampler + 1;
+
+		if (hasMultibind) {
+			if (zeroSamplers == null || zeroSamplers.capacity() < samplers.length) {
+				zeroSamplers = org.lwjgl.system.MemoryUtil.memCallocInt(samplers.length);
+			}
+			zeroSamplers.limit(count);
+			GL45C.glBindSamplers(0, zeroSamplers);
+			zeroSamplers.limit(zeroSamplers.capacity());
+		} else {
+			for (int i = 0; i < count; i++) {
+				if (samplers[i] != 0) {
+					GL33C.glBindSampler(i, 0);
+				}
+			}
+		}
+
+		java.util.Arrays.fill(samplers, 0, count, 0);
+		highestBoundSampler = -1;
 	}
 
 

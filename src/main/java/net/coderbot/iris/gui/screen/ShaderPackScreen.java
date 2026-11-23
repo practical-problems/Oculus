@@ -178,8 +178,9 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 	@Override
 	protected void init() {
 		super.init();
-		int bottomCenter = this.width / 2 - 50;
-		int topCenter = this.width / 2 - 76;
+		// Two rows of three equal buttons: [Open folder][Settings][Experimental] above [Cancel][Apply][Done].
+		int buttonWidth = 120;
+		int buttonLeft = this.width / 2 - (3 * buttonWidth + 2 * 4) / 2;
 		boolean inWorld = this.minecraft.level != null;
 
 		this.removeWidget(this.shaderPackList);
@@ -215,19 +216,23 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				this.addRenderableWidget(shaderPackList);
 			}
 
-			this.addRenderableWidget(new Button(bottomCenter + 104, this.height - 27, 100, 20,
+			this.addRenderableWidget(new Button(buttonLeft + 2 * (buttonWidth + 4), this.height - 27, buttonWidth, 20,
 				CommonComponents.GUI_DONE, button -> onClose()));
 
-			this.addRenderableWidget(new Button(bottomCenter, this.height - 27, 100, 20,
+			this.addRenderableWidget(new Button(buttonLeft + buttonWidth + 4, this.height - 27, buttonWidth, 20,
 				Component.translatable("options.iris.apply"), button -> this.applyChanges()));
 
-			this.addRenderableWidget(new Button(bottomCenter - 104, this.height - 27, 100, 20,
+			this.addRenderableWidget(new Button(buttonLeft, this.height - 27, buttonWidth, 20,
 				CommonComponents.GUI_CANCEL, button -> this.dropChangesAndClose()));
 
-			this.addRenderableWidget(new Button(topCenter - 78, this.height - 51, 152, 20,
-				Component.translatable("options.iris.openShaderPackFolder"), button -> openShaderPackFolder()));
+			// The full "Open Shader Pack Folder..." does not fit a 120-wide button.
+			this.addRenderableWidget(new Button(buttonLeft, this.height - 51, buttonWidth, 20,
+				Component.literal("Open Pack Folder..."), button -> openShaderPackFolder()));
 
-			this.screenSwitchButton = this.addRenderableWidget(new Button(topCenter + 78, this.height - 51, 152, 20,
+			this.addRenderableWidget(new Button(buttonLeft + 2 * (buttonWidth + 4), this.height - 51, buttonWidth, 20,
+				Component.literal("Experimental..."), button -> this.minecraft.setScreen(new ExperimentalScreen(this))));
+
+			this.screenSwitchButton = this.addRenderableWidget(new Button(buttonLeft + buttonWidth + 4, this.height - 51, buttonWidth, 20,
 				Component.translatable("options.iris.shaderPackList"), button -> {
 					this.optionMenuOpen = !this.optionMenuOpen;
 
@@ -250,7 +255,7 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 				? Component.translatable("options.iris.gui.show")
 				: Component.translatable("options.iris.gui.hide");
 
-			float endOfLastButton = this.width / 2.0f + 154.0f;
+			float endOfLastButton = this.width / 2.0f + 184.0f;
 			float freeSpace = this.width - endOfLastButton;
 			int x;
 			if (freeSpace > 100.0f) {

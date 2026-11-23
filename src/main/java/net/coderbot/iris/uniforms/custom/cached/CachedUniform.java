@@ -25,8 +25,17 @@ public abstract class CachedUniform implements VariableExpression {
 		this.changed = false;
 	}
 	
+	// Experimental "Changed-only uniforms" (Emberlens): bumped whenever doUpdate() reports a new value.
+	private int version;
+
+	public int version() {
+		return this.version;
+	}
+
 	public void update() {
-		doUpdate();
+		if (doUpdate()) {
+			this.version++;
+		}
 		// TODO: Works around a logic error / architectural flaw - there's no way to
 		//       know when a uniform has been uploaded to all programs, so we can never
 		//       safely change this to false with the current design.

@@ -44,6 +44,11 @@ public class MixinLevelRenderer_EntityListSorting {
 			slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/RenderBuffers;bufferSource()Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;"),
 					to = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/EntityRenderDispatcher;shouldRender(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/client/renderer/culling/Frustum;DDD)Z")), allow = 1)
     private Iterator<Entity> batchedentityrendering$sortEntityList(Iterator<Entity> iterator) {
+        // Experimental "No sort without shaders" (Emberlens): the sort only helps Oculus's batching with a pack.
+        if (net.coderbot.iris.config.ExperimentalConfig.noSortWithoutShaders && !net.coderbot.iris.Iris.isPackInUseQuick()) {
+            return iterator;
+        }
+
         // Sort the entity list first in order to allow vanilla's entity batching code to work better.
         this.level.getProfiler().push("sortEntityList");
 

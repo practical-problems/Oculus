@@ -46,6 +46,13 @@ public class ProgramUniforms {
 	}
 
 	private void updateStage(ImmutableList<Uniform> uniforms) {
+		if (net.coderbot.iris.config.ExperimentalConfig.indexedLoops) {
+			for (int i = 0; i < uniforms.size(); i++) {
+				uniforms.get(i).update();
+			}
+			return;
+		}
+
 		for (Uniform uniform : uniforms) {
 			uniform.update();
 		}
