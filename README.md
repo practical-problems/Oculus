@@ -25,7 +25,9 @@ Spectacles requires [Rubidium](https://www.curseforge.com/minecraft/mc-mods/rubi
 ## Notes
 
 This is a fork of Teqed's `1.19.2` branch (Oculus 1.6.9) to make **Distant Horizons 3.3.3** work with shaders on Forge 1.19.2.
-The version label says "1.8.0" only so DH's version check passes (the mod itself is based on 1.6.9).
+**Versions:** Spectacles is based on Oculus 1.6.9, with the Distant Horizons features of Oculus 1.8.0 ported over. The rest of
+1.8.0 (the Iris 1.7 rewrite, e.g. tessellation shaders) is not included; single features are ported when a pack needs them. The
+jar name says `1.6.9` for that reason. The version label inside the mod says "1.8.0" only so DH's version check passes.
 
 **Status:** DH LODs render with shaders on. This branch adds `dh_terrain` and `dh_water` programs, the `dhDepthTex`/`dhDepthTex1`
 samplers, the `dh*` uniforms and the `DISTANT_HORIZONS`/`DH_BLOCK_*` macros (ported from PolarBearEs's fork), so packs like

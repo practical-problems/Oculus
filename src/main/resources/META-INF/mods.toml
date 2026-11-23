@@ -9,7 +9,8 @@ logoFile="oculus-logo.png"
 authors="coderbot, IMS212, Justsnoopy30, FoundationGames"
 description='''
 Spectacles: a Distant Horizons-focused fork of Oculus (the Forge port of Iris) for Minecraft 1.19.2.
-Mod ID stays "oculus" so DH and other mods still recognise it.
+Based on Oculus 1.6.9, with the Distant Horizons features of Oculus 1.8.0 ported over.
+Mod ID stays "oculus" and the version reads 1.8.0 so DH and other mods still recognise it.
 '''
 
 [[dependencies.oculus]]
