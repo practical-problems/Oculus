@@ -56,7 +56,8 @@ third around Create contraptions. Choose your shader setting before joining a wo
 
 **DH generic objects** (beacon beams beyond your render distance, DH's own clouds, and boxes other mods add through DH's API) are
 drawn through the pack's `dh_generic` program, or its `dh_terrain` program if it has none (as in real Oculus 1.8.0), so they are lit,
-fogged and hidden behind LOD terrain like the LODs themselves. They are left out of the LOD shadow pass. Packs that discard LOD pixels
+fogged and hidden behind LOD terrain like the LODs themselves, and glowing ones get the pack's glow (beacon beams are
+emissive at night in Bliss and get Photon's bloom). They are left out of the LOD shadow pass. Packs that discard LOD pixels
 near the player (Bliss's DH overdraw prevention) cut the same zone out of the beam; Minecraft's own beam covers it once the chunk is loaded.
 
 The DH features of real Oculus 1.8.0 are now all backported. In-game test results are in [TEST_RESULTS.md](TEST_RESULTS.md).
