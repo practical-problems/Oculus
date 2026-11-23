@@ -138,6 +138,9 @@ Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are do
 Do not port the whole Iris 1.7 refactor (package `net.irisshaders`). Port only DH pieces, adapted to `net.coderbot.iris` classes.
 See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 3.3.3, so its DH-facing code is API-compatible.
 
+Non-DH ports from other forks (Emberlens so far) are tracked in `BACKPORT_CANDIDATES.md`, only ones that work with stock
+Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported or tested. DH backport comes first.
+
 ## References (clone read-only)
 - `Asek3/Oculus` branch **`1.20.1-new`** (mod 1.8.0, 2025-05): the real 1.8.0 source. Primary blueprint for the DH 3.x integration.
 - `Asek3/Oculus` branch `1.20.1-DH` (1.6.15aDH): older DH 2.0.3-a design on the same 1.6.x layout. Good for structure
