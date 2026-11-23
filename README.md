@@ -92,6 +92,10 @@ These come from other mods or shader packs; they are listed so they are not repo
 - **Bliss: the "IRIS REQUIRED" label** next to its DH options is fixed text in Bliss's menu, not a detection failure.
 - **Photon: the upper part of a DH beacon beam turns dark with cloud shadows on.** Photon's clouds darken the beam from about the
   cloud layer upward; raising Photon's cloud altitude moves that point up with them. Its own behaviour with DH objects.
+- **Photon: DH beacon beams glow much more strongly than vanilla beams**, with a large halo in rain. DH gives beams its
+  "illuminated" material (the one used for glowstone, lanterns and lava in LODs), which Photon renders as a full-strength light
+  source; Minecraft's own beam goes through Photon's dedicated beacon-beam program. Real Oculus 1.8.0 passes the same data.
+  Photon's bloom, emission or fog settings can soften it.
 - **Photon: `#endif without #if`** is logged on every load. It comes from Photon's own files and does not affect rendering.
 
 ### Changes

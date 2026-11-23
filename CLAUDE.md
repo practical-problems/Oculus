@@ -125,7 +125,8 @@ Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are do
    A freshly placed beacon only appears once DH updates the chunk's LOD (save/unload). DH clouds tested too: hidden with Bliss/Photon/
    Complementary's own clouds (pack clouds=off), drawn and lit by Complementary with its cloud style set to vanilla (slightly
    see-through, stars show through at night; DH blends them). Photon: beam gets bloom and rain-puddle reflections; cloud shadows
-   darken its upper part (moves with Photon's cloud altitude). Ported from 1.8.0
+   darken its upper part (moves with Photon's cloud altitude). Photon also gives the LOD beam a much larger glow than Minecraft's
+   beam (DH ILLUMINATED material -> Photon material 36, full emission; vanilla beam uses gbuffers_beaconbeam); same data as 1.8.0. Ported from 1.8.0
    (reference clone: Asek3/Oculus `1.20.1-new`). `ProgramSet.getDhGeneric()` (`dh_generic`, else `dh_terrain` like 1.8.0's
    `ProgramId.DhGeneric` fallback); `Patch.DH_GENERIC` + `DHGenericTransformer` (instanced unit box: attrib 0 vPosition vec3,
    1 iris_color, 2 aScale, 3 aTranslateChunk ivec3, 4 aTranslateSubChunk, 5 aMaterial int; locations bound at link time since our
