@@ -70,6 +70,7 @@ public class ShadowRenderer {
 	private final float halfPlaneLength;
 	private final float nearPlane;
 	private final float farPlane;
+	private boolean loggedShadowRange;
 	private final float voxelDistance;
 	private final float renderDistanceMultiplier;
 	private final float entityShadowDistanceMultiplier;
@@ -134,9 +135,6 @@ public class ShadowRenderer {
 		this.entityFrustumHolder = new FrustumHolder();
 
 		this.fov = shadowDirectives.getFov();
-		Iris.logger.info("Shadow map: distance {} blocks, depth range {} .. {} (pack values {} / {}){}",
-			halfPlaneLength, ShadowMatrices.resolveNearPlane(nearPlane), ShadowMatrices.resolveFarPlane(farPlane),
-			nearPlane, farPlane, fov != null ? ", perspective fov " + fov : "");
 		this.targets = shadowRenderTargets;
 
 		if (shadow != null) {
@@ -443,6 +441,12 @@ public class ShadowRenderer {
 			projMatrix = ShadowMatrices.createPerspectiveMatrix(this.fov);
 		} else {
 			projMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength, nearPlane, farPlane);
+			if (!loggedShadowRange) {
+				// Resolved on the first shadow frame: -1 planes depend on the DH render distance, which is only known once DH is set up.
+				loggedShadowRange = true;
+				Iris.logger.info("Shadow map (first frame): distance {} blocks, depth range {} .. {} (pack values {} / {})",
+					halfPlaneLength, ShadowMatrices.resolveNearPlane(nearPlane), ShadowMatrices.resolveFarPlane(farPlane), nearPlane, farPlane);
+			}
 		}
 
 		Matrix4f shadowProjection = new Matrix4f();
