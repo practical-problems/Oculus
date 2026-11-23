@@ -16,7 +16,7 @@ flamethrower and Create contraptions behaved; no underground light leak.
 **LOD shadows (`dh_shadow`) work** with packs that ship them (tested with Bliss and its DH shadowmap option), including Oculus 1.8.0's
 shadow-pass culling of LODs (roughly 10-15% more FPS when facing the sun). Packs that combine options in `program.X.enabled`
 (e.g. `A && B`) now get those programs switched correctly. **DH beacon beams and clouds** (generic rendering) are drawn through the
-shader pack too (tested with Bliss, Complementary and Photon). Shader packs without DH support hide LODs while they are active.
+shader pack too (tested with Bliss, Complementary and Photon, and with a pack's own `dh_generic` program). Shader packs without DH support hide LODs while they are active.
 See [TEST_RESULTS.md](TEST_RESULTS.md) for what was tested.
 
 ## Disclaimer
