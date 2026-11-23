@@ -103,7 +103,7 @@ Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Ph
 ## Build
 - JDK 17 for Gradle (Minecraft 1.19.2). Loom is `dev.architectury.loom 1.2-SNAPSHOT`.
 - Put `DistantHorizons-3.3.3-1.19.2-fabric-forge.jar` in `./libs/` (git-ignored). It is `compileOnly` (DH's API and internals are needed to compile the mixins and event code). This works with Loom 1.2.
-- `mod_version` names the jar file (Spectacles' own numbering since the rename: `1.0.0`; the code base is still Oculus 1.6.9);
+- `mod_version` names the jar file (Spectacles' own numbering since the rename: stable `1.0.0`, dev `1.1.0-dev`; the code base is still Oculus 1.6.9);
   `mod_label` is the version string in mods.toml shown in the launcher ("1.8.0 # spoof for DH 3.3").
   Keep the label starting with `1.8.0`.
 - A successful build prints ~19 mixin remap warnings; they are noise from the old toolchain.
