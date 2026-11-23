@@ -74,6 +74,8 @@ three packs ships `dh_generic`, so all use their `dh_terrain` program (logged on
 | Photon at night, cloud shadows on vs off, then cloud altitude raised (~800 blocks) | Photon behaviour: with cloud shadows on the beam turns dark from about the cloud layer up; the dark part moves up with the clouds, and with them far up the beam stays bright to the cloud layer |
 | Close to the beacon (within ~32 blocks) | Expected gap: Bliss's DH overdraw prevention discards LOD pixels within `far - 32` blocks (32 at render distance 4), and DH's own shader does the same without shaders. Minecraft's own beam covers that zone once the chunk is loaded |
 | Freshly placed beacon/pyramid | Not shown in the LOD until DH updates the chunk (save or unload); DH behaviour, also with shaders off |
+| DH clouds (DH cloud rendering on), Complementary with its cloud style set to vanilla | Pass: DH clouds drawn through the pack at cloud height over the LODs, lit by the pack (white by day, dark blue at night), fogged near the horizon; slightly see-through (DH draws them blended), so stars show through at night |
+| DH clouds with Complementary's own clouds, Bliss, Photon | Pass: hidden, because the pack turns vanilla clouds off |
 | Log check | Pass: "generic objects ... use dh_terrain" for Bliss (3 loads), Complementary and Photon; no build warnings or shader errors |
 
 ## Other results from the same day

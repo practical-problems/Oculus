@@ -57,7 +57,7 @@ third around Create contraptions. Choose your shader setting before joining a wo
 **DH generic objects** (beacon beams beyond your render distance, DH's own clouds, and boxes other mods add through DH's API) are
 drawn through the pack's `dh_generic` program, or its `dh_terrain` program if it has none (as in real Oculus 1.8.0), so they are lit,
 fogged and hidden behind LOD terrain like the LODs themselves, and glowing ones get the pack's glow (beacon beams are
-emissive at night in Bliss and get Photon's bloom). They are left out of the LOD shadow pass. Packs that discard LOD pixels
+emissive at night in Bliss and get Photon's bloom; DH clouds are lit and fogged by Complementary). They are left out of the LOD shadow pass. Packs that discard LOD pixels
 near the player (Bliss's DH overdraw prevention) cut the same zone out of the beam; Minecraft's own beam covers it once the chunk is loaded.
 
 The DH features of real Oculus 1.8.0 are now all backported. In-game test results are in [TEST_RESULTS.md](TEST_RESULTS.md).
@@ -71,8 +71,9 @@ These come from other mods or shader packs; they are listed so they are not repo
   joining a world, or switch at the title screen.
 - **DH: faintly glowing modded blocks glow as LODs with shaders** (e.g. Serene Shrubbery plants). DH classifies any block that gives
   off even a little light as illuminated. Workaround: add those blocks to DH's ignored-blocks list.
-- **DH: its own clouds can clash with shader pack clouds.** They are drawn through the pack, but they are a second cloud layer. Oculus
-  hides them when the pack turns clouds off (Bliss, Photon); otherwise turn off DH's cloud rendering in DH's settings.
+- **DH clouds show only with some packs.** Oculus hides DH's clouds when the pack turns clouds off (Bliss, Photon, Complementary with
+  its own clouds). With Complementary's cloud style set to vanilla, DH's clouds replace vanilla's and are drawn through the pack.
+  If they clash with a pack's own clouds, turn off DH's cloud rendering in DH's settings.
 - **DH: a beacon or other blocks you just placed do not show in the LOD yet.** DH updates a changed chunk's LOD when the chunk is saved
   or unloaded, which can take a while while DH is still generating. Moving far away or rejoining the world updates it.
 - **DH: LOD data from DH 2.x shows as magenta/black checkers** until DH regenerates it.
