@@ -76,6 +76,7 @@ three packs ships `dh_generic`, so all use their `dh_terrain` program (logged on
 | Freshly placed beacon/pyramid | Not shown in the LOD until DH updates the chunk (save or unload); DH behaviour, also with shaders off |
 | DH clouds (DH cloud rendering on), Complementary with its cloud style set to vanilla | Pass: DH clouds drawn through the pack at cloud height over the LODs, lit by the pack (white by day, dark blue at night), fogged near the horizon; slightly see-through (DH draws them blended), so stars show through at night |
 | DH clouds with Complementary's own clouds, Bliss, Photon | Pass: hidden, because the pack turns vanilla clouds off |
+| Distant DH clouds through a spyglass (Complementary) | Pass: confirmed as DH's clouds (vanilla clouds off; they vanish when DH cloud rendering is off). Far clouds cover parts of tall LOD mountains behind them, which is expected: the clouds are closer than peaks that rise above cloud height |
 | Log check | Pass: "generic objects ... use dh_terrain" for Bliss (3 loads), Complementary and Photon; no build warnings or shader errors |
 
 ## Other results from the same day

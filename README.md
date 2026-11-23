@@ -73,7 +73,8 @@ These come from other mods or shader packs; they are listed so they are not repo
   off even a little light as illuminated. Workaround: add those blocks to DH's ignored-blocks list.
 - **DH clouds show only with some packs.** Oculus hides DH's clouds when the pack turns clouds off (Bliss, Photon, Complementary with
   its own clouds). With Complementary's cloud style set to vanilla, DH's clouds replace vanilla's and are drawn through the pack.
-  If they clash with a pack's own clouds, turn off DH's cloud rendering in DH's settings.
+  If they clash with a pack's own clouds, turn off DH's cloud rendering in DH's settings. Far DH clouds can cover distant mountains
+  that rise above cloud height; the clouds are closer, so that is correct.
 - **DH: a beacon or other blocks you just placed do not show in the LOD yet.** DH updates a changed chunk's LOD when the chunk is saved
   or unloaded, which can take a while while DH is still generating. Moving far away or rejoining the world updates it.
 - **DH: LOD data from DH 2.x shows as magenta/black checkers** until DH regenerates it.
