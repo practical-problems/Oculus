@@ -302,6 +302,14 @@ public class AdvancedShadowCullingFrustum extends Frustum {
 		return false;
 	}
 
+	/**
+	 * For Distant Horizons shadow-pass culling: plane test only. The box culler holds the vanilla shadow
+	 * distance, which LODs lie beyond by design (same as Oculus 1.8.0).
+	 */
+	public boolean isBoxVisibleIgnoringDistance(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		return isVisible(minX, minY, minZ, maxX, maxY, maxZ) != 0;
+	}
+
 	protected int isVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 		float f = (float)(minX - this.x);
 		float g = (float)(minY - this.y);

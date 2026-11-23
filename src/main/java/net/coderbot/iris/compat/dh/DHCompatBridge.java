@@ -111,6 +111,7 @@ public final class DHCompatBridge {
 	public static float[] getPreviousModelView() { return active.bridgeGetPreviousModelView(); }
 	public static float getNearPlane() { return active.bridgeGetNearPlane(); }
 	public static float getFarPlane() { return active.bridgeGetFarPlane(); }
+	public static boolean hasShadowProgram() { return active.bridgeHasShadowProgram(); }
 
 	public interface Lifecycle {
 		default float[] bridgeGetModelView() { return IDENTITY; }
@@ -118,6 +119,7 @@ public final class DHCompatBridge {
 		default float[] bridgeGetPreviousModelView() { return IDENTITY; }
 		default float bridgeGetNearPlane() { return 0; }
 		default float bridgeGetFarPlane() { return 0; }
+		default boolean bridgeHasShadowProgram() { return false; }
 		void destroy();
 
 		int bridgeGetRenderDistance();

@@ -26,6 +26,11 @@ public class BoxCullingFrustum extends Frustum {
 		return false;
 	}
 
+	/** For Distant Horizons shadow-pass culling (same as Oculus 1.8.0). */
+	public boolean isBoxVisible(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+		return !boxCuller.isCulled((float) minX, (float) minY, (float) minZ, (float) maxX, (float) maxY, (float) maxZ);
+	}
+
 	public boolean isVisible(AABB box) {
 		return !boxCuller.isCulled(box);
 	}

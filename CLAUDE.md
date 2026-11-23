@@ -51,6 +51,12 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
 10. `shadowNearPlane`/`shadowFarPlane` (Iris 1.7+): the base hard-coded the shadow depth range to 0.05..256, clipping distant LODs from the
    shadow map. -1 resolves to +/- DH render distance (old values without DH); `shadowProjection` uniform uses the same matrix.
    Built 2026-11-23; log confirms -1 resolves to +/-2048 (DH 128 chunks) at render time.
+11. Shadow-pass LOD culling (dev branch, untested): `DhShadowCullingFrustum` (bound as `IDhApiShadowCullingFrustum` only when dh_shadow
+   is active) asks `ShadowRenderer.FRUSTUM` (this frame's terrain shadow frustum): Advanced/Reversed -> plane test only, BoxCulling ->
+   distance box, CullEverything -> false, else true. Same rules as 1.8.0's four frustum mixins, done as one wrapper instead of mixins.
+   With dh_shadow active the advanced frustum is built from a projection with DH's near/far planes (1.8.0 uses DHCompat.getProjection()),
+   otherwise its far plane (vanilla view distance) would cull far LODs. DH's F3 line "Shadow VBO Render Count: [visible/total]" shows it;
+   DH config `disableShadowPassFrustumCulling` turns it off for A/B tests.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
@@ -87,12 +93,10 @@ Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Ph
 
 ## What is missing (remaining backport)
 Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are done via the PolarBearEs merge. Still to do:
-1. **`dh_shadow` follow-ups.** Done (commit 7), remaining: confirm the near/far plane fix (commit 10) shows far LOD shadows in Bliss; caves
-   still dark with Bliss DH shadowmap on; shadow-pass culling for LODs (DH uses never-cull, so cost does not depend on shadow distance).
+1. **`dh_shadow` follow-ups.** Shadow-pass culling done in commit 11 (needs testing).
 2. **Generic rendering (DH clouds/beacons):** `IrisGenericRenderProgram`, `DhApiBeforeGenericObjectRenderEvent`,
    `DhApiBeforeGenericRenderSetupEvent`, `DHGenericTransformer`. Until then, turn DH's own cloud rendering off in DH config.
-3. The four DH frustum mixins from real 1.8.0 (`AdvancedShadowCullingFrustum`, `BoxCullingFrustum`, `CullEverythingFrustum`,
-   `NonCullingFrustum`), then test Proton.
+3. (Done as commit 11: the four 1.8.0 frustum mixins are replaced by one `DhShadowCullingFrustum` wrapper.)
 4. Small: `program.X.enabled = A && B` is read as one option name (Bliss logs "unknown option ... defaulting to true"); DH logs a
    deprecated-config-API warning for `enableSsao`/`enableDhFog` set by `DHCompat`.
 Do not port the whole Iris 1.7 refactor (package `net.irisshaders`). Port only DH pieces, adapted to `net.coderbot.iris` classes.

@@ -28,6 +28,7 @@ import net.coderbot.iris.shadows.Matrix4fAccess;
 import net.coderbot.iris.shadows.ShadowCompositeRenderer;
 import net.coderbot.iris.shadows.ShadowRenderTargets;
 import net.coderbot.iris.shadows.frustum.BoxCuller;
+import net.coderbot.iris.compat.dh.DHCompatBridge;
 import net.coderbot.iris.shadows.frustum.CullEverythingFrustum;
 import net.coderbot.iris.shadows.frustum.FrustumHolder;
 import net.coderbot.iris.shadows.frustum.advanced.AdvancedShadowCullingFrustum;
@@ -80,6 +81,8 @@ public class ShadowRenderer {
 	public static Matrix4f MODELVIEW;
 	/** The projection used for the shadow pass this frame (read by the Distant Horizons shadow integration). */
 	public static Matrix4f PROJECTION;
+	/** The terrain shadow frustum of the current frame; Distant Horizons culls LODs against it in the shadow pass. */
+	public static Frustum FRUSTUM;
 
 	private final ShadowRenderTargets targets;
 	private final ShadowCullState packCullingState;
@@ -347,14 +350,31 @@ public class ShadowRenderer {
 
 			if (isReversed) {
 				return holder.setInfo(new ReversedAdvancedShadowCullingFrustum(((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferModelView()).convertToJOML(),
-					((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML(), shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
+					getCullingProjection(), shadowLightVectorFromOrigin, boxCuller, new BoxCuller(halfPlaneLength * renderMultiplier)), distanceInfo, cullingInfo);
 			} else {
 				return holder.setInfo(new AdvancedShadowCullingFrustum(((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferModelView()).convertToJOML(),
-					((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
+					getCullingProjection(), shadowLightVectorFromOrigin, boxCuller), distanceInfo, cullingInfo);
 			}
 		}
 
 		return holder;
+	}
+
+	/**
+	 * Player projection used to build the advanced shadow frustum. When LODs are drawn into the shadow map, its far
+	 * plane is moved out to Distant Horizons' far plane so LODs past the vanilla view distance are not culled
+	 * (same as Oculus 1.8.0, which uses DHCompat.getProjection() here).
+	 */
+	private static net.coderbot.iris.vendored.joml.Matrix4f getCullingProjection() {
+		net.coderbot.iris.vendored.joml.Matrix4f projection =
+			((Matrix4fAccess) (Object) CapturedRenderingState.INSTANCE.getGbufferProjection()).convertToJOML();
+		float dhFar = DHCompatBridge.getFarPlane();
+		if (!DHCompatBridge.hasShadowProgram() || dhFar <= 0.0F) {
+			return projection;
+		}
+		float dhNear = Math.max(DHCompatBridge.getNearPlane(), 0.05F);
+		return new net.coderbot.iris.vendored.joml.Matrix4f().setPerspective(projection.perspectiveFov(),
+			projection.m11() / projection.m00(), dhNear, dhFar);
 	}
 
 	public void setupShadowViewport() {
@@ -392,6 +412,7 @@ public class ShadowRenderer {
 		levelRenderer.getLevel().getProfiler().push("initialize frustum");
 
 		terrainFrustumHolder = createShadowFrustum(renderDistanceMultiplier, terrainFrustumHolder);
+		FRUSTUM = terrainFrustumHolder.getFrustum();
 
 		// Determine the player camera position
 		Vector3d cameraPos = CameraUniforms.getUnshiftedCameraPosition();
@@ -717,6 +738,7 @@ public class ShadowRenderer {
 	}
 
 	public void destroy() {
+		FRUSTUM = null;
 		targets.destroy();
 		((MemoryTrackingRenderBuffers) buffers).freeAndDeleteBuffers();
 	}

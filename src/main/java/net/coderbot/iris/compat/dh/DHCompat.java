@@ -7,6 +7,7 @@ import com.seibel.distanthorizons.api.enums.rendering.EDhApiRenderPass;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiFogDrawMode;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericObjectRenderEvent;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShaderProgram;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiCancelableEventParam;
 import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiRenderParam;
@@ -48,6 +49,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 	private final GlFramebuffer terrainFramebuffer;
 	private final GlFramebuffer translucentFramebuffer;
 	private final GlFramebuffer shadowFramebuffer;
+	private DhShadowCullingFrustum shadowCullingFrustum;
 	private final boolean disableDhClouds;
 	private DepthTexture depthTextureNoTranslucents;
 	private int depthTextureWidth = -1;
@@ -90,6 +92,10 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 		nearPlane=farPlane=0;
 		OverrideInjector.INSTANCE.bind(IDhApiShaderProgram.class, shaderProgram);
 		OverrideInjector.INSTANCE.bind(IDhApiFramebuffer.class, framebufferWrapper);
+		if (shadowFramebuffer != null) {
+			shadowCullingFrustum = new DhShadowCullingFrustum();
+			OverrideInjector.INSTANCE.bind(IDhApiShadowCullingFrustum.class, shadowCullingFrustum);
+		}
 		refreshDepthTexture();
 		applyDhConfigOverrides();
 		Iris.logger.info("Enabled Distant Horizons shader-pack GBuffer integration.");
@@ -123,6 +129,10 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 
 		OverrideInjector.INSTANCE.unbind(IDhApiShaderProgram.class, shaderProgram);
 		OverrideInjector.INSTANCE.unbind(IDhApiFramebuffer.class, framebufferWrapper);
+		if (shadowCullingFrustum != null) {
+			OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, shadowCullingFrustum);
+			shadowCullingFrustum = null;
+		}
 		shaderProgram.free();
 		// These framebuffers are registered in RenderTargets.ownedFramebuffers and are
 		// destroyed with the rest of the pipeline's render targets.
@@ -326,6 +336,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 	@Override public float[] bridgeGetPreviousModelView() { return modelViewHistory.previous(); }
 	@Override public float bridgeGetNearPlane() { return nearPlane; }
 	@Override public float bridgeGetFarPlane() { return farPlane; }
+	@Override public boolean bridgeHasShadowProgram() { return shadowFramebuffer != null; }
 
 	static Matrix4f createProjectionMatrix(DhApiRenderParam param) {
 		com.mojang.math.Matrix4f captured = CapturedRenderingState.INSTANCE.getGbufferProjection();
