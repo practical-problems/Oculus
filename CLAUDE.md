@@ -159,6 +159,17 @@ See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 
 Non-DH ports from other forks (Emberlens so far) are tracked in `BACKPORT_CANDIDATES.md`, only ones that work with stock
 Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported or tested. DH backport comes first.
 
+## Lifecycle edge cases (code review 2026-11-23, not yet tested in game)
+- Dimension change: MixinMinecraft_PipelineManagement destroys all pipelines and builds a new one, so DHCompat.destroy() unbinds
+  its DH overrides and a fresh DHCompat binds new ones. Only a mod rendering several dimensions at once (Immersive Portals) could leave
+  a cached pipeline whose DHCompat is no longer `active` (DH's OverrideInjector.bind replaces same-priority overrides); not on 1.19.2 Forge.
+- World switch in the same dimension keeps the pipeline; DH reports a recreated depth texture via the wrapper (forced re-attach) and the
+  depth generation counter re-attaches the generic framebuffer.
+- Without DH: DHCompatBridge checks the mod list before loading DHCompat by name; DH mixins are gated by IrisDHCompatMixinPlugin;
+  no com.seibel imports outside compat/dh; mods.toml has no DH dependency.
+- Shader toggles: destroy() frees LOD/generic programs, VAO and depth copy; DH framebuffers are owned by RenderTargets.
+- Minimize: copyOpaqueDepth skips zero-size windows.
+
 ## References (clone read-only)
 - `Asek3/Oculus` branch **`1.20.1-new`** (mod 1.8.0, 2025-05): the real 1.8.0 source. Primary blueprint for the DH 3.x integration.
 - `Asek3/Oculus` branch `1.20.1-DH` (1.6.15aDH): older DH 2.0.3-a design on the same 1.6.x layout. Good for structure
