@@ -167,11 +167,13 @@ Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported 
   only a regression check (normal entity rendering) is possible. Done 2026-11-23 (build 20261123-1736, Bliss and Photon):
   chests, anvils, furnaces fine, no Oculus errors.
 
-## Lifecycle edge cases (code review 2026-11-23, not yet tested in game)
+## Lifecycle edge cases (code review 2026-11-23; Nether entry tested)
 - Dimension change: MixinMinecraft_PipelineManagement destroys all pipelines and builds a new one, so DHCompat.destroy() unbinds
   its DH overrides and a fresh DHCompat binds new ones. Only a mod rendering several dimensions at once (Immersive Portals) could leave
   a cached pipeline whose DHCompat is no longer `active` (DH's OverrideInjector.bind replaces same-priority overrides); not on 1.19.2 Forge.
-- World switch in the same dimension keeps the pipeline (Iris.lastDimension survives clearLevel by design). DH's GL objects we hold on
+- World switch: MixinMinecraft_PipelineManagement compares NamespacedId with `!=` (reference), and getCurrentDimension() makes a new
+  object per call, so every level change with a non-null level rebuilds the pipeline (log 2026-11-23: "overworld => overworld" on
+  rejoin). Nether entry tested with Photon: pipeline rebuilt, DH integration re-enabled, no errors. Even if the pipeline were kept: DH's GL objects we hold on
   to are game-wide: `GlDhMetaRenderer.INSTANCE` creates its framebuffer and depth texture once (`renderObjectsCreated`) and only
   recreates the depth texture on viewport resize (then calls our wrapper's addDepthAttachment). Per-world DH objects (LOD buffers, the
   GlGenericObjectRenderer and its box vertex buffer) are passed to us every frame (bindVertexBuffer, event params), never cached.
