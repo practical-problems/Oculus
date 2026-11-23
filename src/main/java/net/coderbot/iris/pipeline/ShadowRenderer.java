@@ -68,6 +68,8 @@ public class ShadowRenderer {
 	public static List<BlockEntity> visibleBlockEntities;
 
 	private final float halfPlaneLength;
+	private final float nearPlane;
+	private final float farPlane;
 	private final float voxelDistance;
 	private final float renderDistanceMultiplier;
 	private final float entityShadowDistanceMultiplier;
@@ -111,6 +113,8 @@ public class ShadowRenderer {
 		final PackShadowDirectives shadowDirectives = directives.getShadowDirectives();
 
 		this.halfPlaneLength = shadowDirectives.getDistance();
+		this.nearPlane = shadowDirectives.getNearPlane();
+		this.farPlane = shadowDirectives.getFarPlane();
 		this.voxelDistance = shadowDirectives.getVoxelDistance();
 		this.renderDistanceMultiplier = shadowDirectives.getDistanceRenderMul();
 		this.entityShadowDistanceMultiplier = shadowDirectives.getEntityShadowDistanceMul();
@@ -435,7 +439,7 @@ public class ShadowRenderer {
 			// If FOV is not null, the pack wants a perspective based projection matrix. (This is to support legacy packs)
 			projMatrix = ShadowMatrices.createPerspectiveMatrix(this.fov);
 		} else {
-			projMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength);
+			projMatrix = ShadowMatrices.createOrthoMatrix(halfPlaneLength, nearPlane, farPlane);
 		}
 
 		Matrix4f shadowProjection = new Matrix4f();

@@ -13,15 +13,38 @@ public class ShadowMatrices {
 	// NB: These matrices are in column-major order, not row-major order like what you'd expect!
 
 	public static float[] createOrthoMatrix(float halfPlaneLength) {
+		return createOrthoMatrix(halfPlaneLength, NEAR, FAR);
+	}
+
+	/** Packs may set shadowNearPlane/shadowFarPlane (Iris 1.7+); -1 means "cover the Distant Horizons render distance". */
+	public static float resolveNearPlane(float nearPlane) {
+		if (nearPlane >= 0.0f) {
+			return nearPlane;
+		}
+		int dhDistance = net.coderbot.iris.compat.dh.DHCompatBridge.getRenderDistance();
+		return dhDistance > 0 ? -dhDistance : NEAR;
+	}
+
+	public static float resolveFarPlane(float farPlane) {
+		if (farPlane >= 0.0f) {
+			return farPlane;
+		}
+		int dhDistance = net.coderbot.iris.compat.dh.DHCompatBridge.getRenderDistance();
+		return dhDistance > 0 ? dhDistance : FAR;
+	}
+
+	public static float[] createOrthoMatrix(float halfPlaneLength, float nearPlane, float farPlane) {
+		final float near = resolveNearPlane(nearPlane);
+		final float far = resolveFarPlane(farPlane);
 		return new float[] {
 				// column 1
 				1.0f / halfPlaneLength, 0f, 0f, 0f,
 				// column 2
 				0f, 1.0f / halfPlaneLength, 0f, 0f,
 				// column 3
-				0f, 0f, 2.0f / (NEAR - FAR), 0f,
+				0f, 0f, 2.0f / (near - far), 0f,
 				// column 4
-				0f, 0f, -(FAR + NEAR) / (FAR - NEAR), 1f
+				0f, 0f, -(far + near) / (far - near), 1f
 		};
 	}
 

@@ -29,6 +29,10 @@ public class PackShadowDirectives {
 	private float entityShadowDistanceMul;
 	private boolean explicitRenderDistance;
 	private float intervalSize;
+	// Depth range of the orthographic shadow projection (Iris 1.7+ shadowNearPlane/shadowFarPlane).
+	// A negative value means "use the Distant Horizons render distance", see ShadowMatrices.resolve*.
+	private float nearPlane;
+	private float farPlane;
 
 	private final boolean shouldRenderTerrain;
 	private final boolean shouldRenderTranslucent;
@@ -80,6 +84,8 @@ public class PackShadowDirectives {
 		// a grid where each grid cell is 2 meters by 2 meters by 2 meters, and it will only move either when the sun /
 		// moon move, or when the player camera moves into a different grid cell.
 		this.intervalSize = 2.0f;
+		this.nearPlane = 0.05f;
+		this.farPlane = 256.0f;
 
 		this.shouldRenderTerrain = properties.getShadowTerrain().orElse(true);
 		this.shouldRenderTranslucent = properties.getShadowTranslucent().orElse(true);
@@ -106,6 +112,8 @@ public class PackShadowDirectives {
 		this.entityShadowDistanceMul = shadowDirectives.entityShadowDistanceMul;
 		this.explicitRenderDistance = shadowDirectives.explicitRenderDistance;
 		this.intervalSize = shadowDirectives.intervalSize;
+		this.nearPlane = shadowDirectives.nearPlane;
+		this.farPlane = shadowDirectives.farPlane;
 		this.shouldRenderTerrain = shadowDirectives.shouldRenderTerrain;
 		this.shouldRenderTranslucent = shadowDirectives.shouldRenderTranslucent;
 		this.shouldRenderEntities = shadowDirectives.shouldRenderEntities;
@@ -144,6 +152,14 @@ public class PackShadowDirectives {
 
 	public boolean isDistanceRenderMulExplicit() {
 		return explicitRenderDistance;
+	}
+
+	public float getNearPlane() {
+		return nearPlane;
+	}
+
+	public float getFarPlane() {
+		return farPlane;
 	}
 
 	public float getIntervalSize() {
@@ -200,6 +216,8 @@ public class PackShadowDirectives {
 
 		directives.acceptCommentFloatDirective("SHADOWHPL", distance -> this.distance = distance);
 		directives.acceptConstFloatDirective("shadowDistance", distance -> this.distance = distance);
+		directives.acceptConstFloatDirective("shadowNearPlane", nearPlane -> this.nearPlane = nearPlane);
+		directives.acceptConstFloatDirective("shadowFarPlane", farPlane -> this.farPlane = farPlane);
 		directives.acceptConstFloatDirective("voxelDistance", distance -> this.voxelDistance = distance);
 
 		directives.acceptConstFloatDirective("entityShadowDistanceMul", distance -> this.entityShadowDistanceMul = distance);
