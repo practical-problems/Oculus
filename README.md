@@ -10,8 +10,8 @@ Oculus is an Unofficial Fork of ["Iris"](https://www.curseforge.com/minecraft/mc
 
 ## TL;DR:
 Distant Horizons 3.3.3 LODs render with shaders on and the pack can see LOD depth (clouds and fog draw behind LODs), but this is **not feature complete**.
-Tested in game with Complementary Reimagined + Euphoria Patches, Photon and Bliss: LODs, MekaSuit, the Mekanism flamethrower and Create
-contraptions behaved; no underground light leak.
+Tested in game with Complementary Reimagined + Euphoria Patches, Photon, Bliss and Sildur's Vibrant 1.541: LODs, MekaSuit, the Mekanism
+flamethrower and Create contraptions behaved; no underground light leak.
 **LOD shadows (`dh_shadow`) are a preliminary implementation**: they work in Bliss with its DH shadowmap option, but are lightly tested.
 DH clouds/beacons (generic rendering) are still missing. Shader packs without DH support hide LODs while they are active.
 
@@ -33,7 +33,19 @@ Euphoria can see LOD depth.
 **LOD shadows (preliminary):** when a pack ships a `dh_shadow` program and doesn't disable it (`dhShadow.enabled`), LODs are drawn
 into the shadow map using the sun's matrices. Only Bliss does this among the packs tested (turn on its "DH shadowmap support" option);
 Complementary, Euphoria and Photon turn LOD shadows off themselves. Known limits: no culling of LODs in the shadow pass yet (cost does
-not depend on shadow distance), and the far-distance range fix (`shadowNearPlane`/`shadowFarPlane`) is new and lightly tested.
+not depend on shadow distance). With `shadowNearPlane`/`shadowFarPlane = -1` the shadow depth range covers the full DH render distance
+(same as real Oculus 1.8.0); far LOD shadows in Bliss still look faint, most likely due to Bliss's experimental DH shadowmap mode.
+
+**Shader packs without DH support** (no `dh_terrain`, e.g. Sildur's Vibrant 1.41) hide LODs while they are active; switching to a
+DH-aware pack or turning shaders off brings them back without a restart.
+
+**Oculus Flywheel Compat** (`oculus-flywheel-compat-forge1.19.2+1.0.3b`) works with this build and raised FPS with Photon by about a
+third around Create contraptions. Choose your shader setting before joining a world: turning shaders on while in a world crashes the
+game in that mod's vertex writer (its bug, not Oculus's).
+
+**Known DH quirks (not Oculus bugs):** modded blocks that give off even a little light (e.g. Serene Shrubbery plants) can glow as LODs
+with shaders, because DH classifies them as illuminated; add them to DH's ignored-blocks list. DH's own clouds clash with pack clouds;
+turn DH cloud rendering off.
 
 Not implemented yet: generic rendering (DH clouds/beacons; turn DH's own cloud rendering off) and DH frustum culling for shadows.
 Backporting the rest of the real Oculus 1.8.0 DH support is ongoing.
