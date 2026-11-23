@@ -69,8 +69,11 @@ These come from other mods or shader packs; they are listed so they are not repo
   unsafe vertex reader and writer to a 52-byte vertex format as soon as shaders are on, but Create models already built with shaders
   off are still in the 32-byte format, so the reader runs past the end of that data. Workaround: choose your shader setting before
   joining a world, or switch at the title screen.
-- **DH: faintly glowing modded blocks glow as LODs with shaders** (e.g. Serene Shrubbery plants). DH classifies any block that gives
-  off even a little light as illuminated. Workaround: add those blocks to DH's ignored-blocks list.
+- **DH: faintly glowing modded blocks glow as LODs with shaders** (e.g. all 26 Serene Shrubbery plants, which give off light level 1,
+  and AE2's certus quartz buds and clusters). DH classifies any block that gives off light as illuminated. Workaround: add them to
+  DH's Advanced > Graphics > Culling > "Ignored Block CSV" (exact `modid:block` IDs separated by commas; no wildcards), e.g.
+  `ae2:small_quartz_bud,ae2:medium_quartz_bud,ae2:large_quartz_bud,ae2:quartz_cluster`. They then no longer appear in LODs;
+  nearby chunks are unchanged.
 - **DH clouds show only with some packs.** Oculus hides DH's clouds when the pack turns clouds off (Bliss, Photon, Complementary with
   its own clouds). With Complementary's cloud style set to vanilla, DH's clouds replace vanilla's and are drawn through the pack.
   If they clash with a pack's own clouds, turn off DH's cloud rendering in DH's settings. Far DH clouds can cover distant mountains

@@ -111,7 +111,9 @@ Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Ph
 - Old LOD data from DH 2.x shows as magenta/black checkers until DH regenerates it. Not a bug.
 - DH material IDs (`DH_BLOCK_*` 0-15) match DH 3.3.3's `EDhApiBlockMaterial`. DH's `BlockStateWrapper` falls back to `ILLUMINATED`
   for any block with light emission > 0 that matches no earlier category, so faintly glowing modded plants (Serene Shrubbery) glow as
-  LODs in Complementary, Photon and Sildur's. DH/pack behaviour, not Oculus. Workaround: add those blocks to DH's ignored-blocks list.
+  LODs in Complementary, Photon and Sildur's. DH/pack behaviour, not Oculus. Workaround: add those blocks to DH's ignored-blocks list
+  (Advanced > Graphics > Culling > `ignoredRenderBlockCsv`: exact IDs only, no wildcards; applied at render-buffer build, no LOD
+  regeneration). Serene Shrubbery 1.5.0: all 26 plants are MCreator blocks with light level 1. AE2 certus buds/clusters do the same.
 
 ## Backport status (all 1.8.0 DH features done)
 Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are done via the PolarBearEs merge. Items 1-4 below are all done (status notes kept for history):
