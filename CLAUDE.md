@@ -163,8 +163,10 @@ Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported 
 - Dimension change: MixinMinecraft_PipelineManagement destroys all pipelines and builds a new one, so DHCompat.destroy() unbinds
   its DH overrides and a fresh DHCompat binds new ones. Only a mod rendering several dimensions at once (Immersive Portals) could leave
   a cached pipeline whose DHCompat is no longer `active` (DH's OverrideInjector.bind replaces same-priority overrides); not on 1.19.2 Forge.
-- World switch in the same dimension keeps the pipeline; DH reports a recreated depth texture via the wrapper (forced re-attach) and the
-  depth generation counter re-attaches the generic framebuffer.
+- World switch in the same dimension keeps the pipeline (Iris.lastDimension survives clearLevel by design). DH's GL objects we hold on
+  to are game-wide: `GlDhMetaRenderer.INSTANCE` creates its framebuffer and depth texture once (`renderObjectsCreated`) and only
+  recreates the depth texture on viewport resize (then calls our wrapper's addDepthAttachment). Per-world DH objects (LOD buffers, the
+  GlGenericObjectRenderer and its box vertex buffer) are passed to us every frame (bindVertexBuffer, event params), never cached.
 - Without DH: DHCompatBridge checks the mod list before loading DHCompat by name; DH mixins are gated by IrisDHCompatMixinPlugin;
   no com.seibel imports outside compat/dh; mods.toml has no DH dependency.
 - Shader toggles: destroy() frees LOD/generic programs, VAO and depth copy; DH framebuffers are owned by RenderTargets.
