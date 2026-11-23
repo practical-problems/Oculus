@@ -9,13 +9,15 @@
 Oculus is an Unofficial Fork of ["Iris"](https://www.curseforge.com/minecraft/mc-mods/irisshaders), made to work with Forge Mod Loader.
 
 ## TL;DR:
-Distant Horizons 3.3.3 LODs render with shaders on and the pack can see LOD depth (clouds and fog draw behind LODs), but this is **not feature complete**.
+Distant Horizons 3.3.3 LODs render with shaders on and the pack can see LOD depth (clouds and fog draw behind LODs). The DH support
+of real Oculus 1.8.0 is fully backported.
 Tested in game with Complementary Reimagined + Euphoria Patches, Photon, Bliss and Sildur's Vibrant 1.541: LODs, MekaSuit, the Mekanism
 flamethrower and Create contraptions behaved; no underground light leak.
 **LOD shadows (`dh_shadow`) work** with packs that ship them (tested with Bliss and its DH shadowmap option), including Oculus 1.8.0's
 shadow-pass culling of LODs (roughly 10-15% more FPS when facing the sun). Packs that combine options in `program.X.enabled`
-(e.g. `A && B`) now get those programs switched correctly. DH clouds/beacons (generic rendering) are still missing. Shader packs
-without DH support hide LODs while they are active. See [TEST_RESULTS.md](TEST_RESULTS.md) for what was tested.
+(e.g. `A && B`) now get those programs switched correctly. **DH beacon beams and clouds** (generic rendering) are drawn through the
+shader pack too (tested with Bliss, Complementary and Photon). Shader packs without DH support hide LODs while they are active.
+See [TEST_RESULTS.md](TEST_RESULTS.md) for what was tested.
 
 ## Disclaimer
 Oculus is not and never will be compatible with Optifine!
@@ -52,8 +54,12 @@ DH-aware pack or turning shaders off brings them back without a restart.
 **Oculus Flywheel Compat** (`oculus-flywheel-compat-forge1.19.2+1.0.3b`) works with this build and raised FPS with Photon by about a
 third around Create contraptions. Choose your shader setting before joining a world (see Known quirks below).
 
-Not implemented yet: generic rendering (DH clouds/beacons; turn DH's own cloud rendering off).
-Backporting the rest of the real Oculus 1.8.0 DH support is ongoing. In-game test results are in [TEST_RESULTS.md](TEST_RESULTS.md).
+**DH generic objects** (beacon beams beyond your render distance, DH's own clouds, and boxes other mods add through DH's API) are
+drawn through the pack's `dh_generic` program, or its `dh_terrain` program if it has none (as in real Oculus 1.8.0), so they are lit,
+fogged and hidden behind LOD terrain like the LODs themselves. They are left out of the LOD shadow pass. Packs that discard LOD pixels
+near the player (Bliss's DH overdraw prevention) cut the same zone out of the beam; Minecraft's own beam covers it once the chunk is loaded.
+
+The DH features of real Oculus 1.8.0 are now all backported. In-game test results are in [TEST_RESULTS.md](TEST_RESULTS.md).
 
 ### Known quirks (not Oculus bugs)
 These come from other mods or shader packs; they are listed so they are not reported as Oculus bugs.
@@ -64,8 +70,10 @@ These come from other mods or shader packs; they are listed so they are not repo
   joining a world, or switch at the title screen.
 - **DH: faintly glowing modded blocks glow as LODs with shaders** (e.g. Serene Shrubbery plants). DH classifies any block that gives
   off even a little light as illuminated. Workaround: add those blocks to DH's ignored-blocks list.
-- **DH: its own clouds clash with shader pack clouds.** Turn off DH's cloud rendering in DH's settings. (Drawing DH clouds through the
-  shader pack is not implemented yet.)
+- **DH: its own clouds can clash with shader pack clouds.** They are drawn through the pack, but they are a second cloud layer. Oculus
+  hides them when the pack turns clouds off (Bliss, Photon); otherwise turn off DH's cloud rendering in DH's settings.
+- **DH: a beacon or other blocks you just placed do not show in the LOD yet.** DH updates a changed chunk's LOD when the chunk is saved
+  or unloaded, which can take a while while DH is still generating. Moving far away or rejoining the world updates it.
 - **DH: LOD data from DH 2.x shows as magenta/black checkers** until DH regenerates it.
 - **DH: an occasional crash on Save and Quit** (`NoClassDefFoundError: DhApiWorldUnloadEvent` in DH's own code). Seen once, not
   reproduced. If it repeats, try Java 17 or 21.
@@ -90,6 +98,9 @@ These come from other mods or shader packs; they are listed so they are not repo
   same rules as Oculus 1.8.0 but in one class instead of four mixins. The frustum's far plane is extended to DH's render distance, read
   live from DH's config, so distant LOD shadows are kept; unlike 1.8.0 the vanilla near plane is kept, so the frustum is never
   smaller than before and nearby shadows cannot be culled.
+- DH generic rendering (beacon beams, DH clouds, API boxes), ported from Oculus 1.8.0: the pack's `dh_generic` program (or `dh_terrain`),
+  a shader transformer for DH's instanced boxes, the LOD matrices and lightmap, and DH's generic object shader override. If the program
+  cannot be built, DH keeps its own shader. Unlike 1.8.0, generic objects are skipped in the LOD shadow pass.
 - Fixes for packs written for Iris 1.7+: `shaders.properties` no longer has `IS_IRIS`/`DISTANT_HORIZONS` erased or `#ifndef` lines
   broken by text replacement (this broke Bliss, Photon and parts of Euphoria), and `dhRenderDistance`/`dhNearPlane`/`dhFarPlane`
   are visible to `shaders.properties` expressions (Photon rendered black without it).

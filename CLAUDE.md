@@ -113,10 +113,14 @@ Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Ph
   for any block with light emission > 0 that matches no earlier category, so faintly glowing modded plants (Serene Shrubbery) glow as
   LODs in Complementary, Photon and Sildur's. DH/pack behaviour, not Oculus. Workaround: add those blocks to DH's ignored-blocks list.
 
-## What is missing (remaining backport)
-Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are done via the PolarBearEs merge. Still to do:
+## Backport status (all 1.8.0 DH features done)
+Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are done via the PolarBearEs merge. Items 1-4 below are all done (status notes kept for history):
 1. **`dh_shadow` follow-ups.** Shadow-pass culling done and tested (commit 11).
-2. **Generic rendering (DH clouds/beacons): implemented on the dev branch, untested in game.** Ported from 1.8.0
+2. **Generic rendering (DH clouds/beacons): done, tested 2026-11-23** (build `d2fc7b4`; Bliss, Complementary+Euphoria, Photon:
+   beacon beam drawn through the pack at the right place, hidden behind LOD hills, emissive at night, no beam shadow with Bliss's DH
+   shadowmap, log line "generic objects ... use dh_terrain" for every pack, no errors). Near gap within ~32 blocks is Bliss's DH
+   overdraw prevention (`far - 32` sphere in `dimensions/DH_solid.fsh`); DH's own shader shows the same gap without shaders.
+   A freshly placed beacon only appears once DH updates the chunk's LOD (save/unload). Ported from 1.8.0
    (reference clone: Asek3/Oculus `1.20.1-new`). `ProgramSet.getDhGeneric()` (`dh_generic`, else `dh_terrain` like 1.8.0's
    `ProgramId.DhGeneric` fallback); `Patch.DH_GENERIC` + `DHGenericTransformer` (instanced unit box: attrib 0 vPosition vec3,
    1 iris_color, 2 aScale, 3 aTranslateChunk ivec3, 4 aTranslateSubChunk, 5 aMaterial int; locations bound at link time since our
@@ -161,8 +165,10 @@ One intermittent crash on Save and Quit: `NoClassDefFoundError: DhApiWorldUnload
 jar). Not in Oculus code; suspects: Java 24 on Forge 43, Redirector/ModernFix interaction, DH bug. Watch for repeats.
 - Loads to the main menu and into the world with DH 3.3.3 and Complementary Reimagined / Euphoria Patches.
 - LODs visible with shaders on and off; no underground light leak; MekaSuit renders; Mekanism flamethrower does not crash.
-- Known gaps: LOD shadows only with packs that ship `dh_shadow` (Bliss with its DH shadowmap option); DH clouds/beacons unsupported
-  (disable DH cloud rendering).
+- Known gaps: LOD shadows only with packs that ship `dh_shadow` (Bliss with its DH shadowmap option). DH clouds/beacons work since
+  generic rendering; DH clouds are hidden when the pack sets `clouds=off`, otherwise users may want DH's cloud rendering off.
+- All DH features of real 1.8.0 are backported. Remaining DH items are optional (cull LOD shadow sections outside the shadow ortho box,
+  force shadow drawbuffers {0,1} like 1.8.0, Bliss on real Iris far-shadow comparison).
 - All 2026-11-23 tests used Minecraft render distance 4 chunks.
 - LOD shadow test: render distance 4, a tall LOD object between you and a low sun, on/off shots from the same view after chunks settle.
 - Keep exactly one Oculus jar enabled. DH config resets are fine. Generation of the DH database takes hours and lowers FPS meanwhile.
