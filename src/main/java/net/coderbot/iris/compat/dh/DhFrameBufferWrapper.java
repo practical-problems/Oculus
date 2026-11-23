@@ -5,18 +5,28 @@ import org.lwjgl.opengl.GL30C;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
 
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 
 public final class DhFrameBufferWrapper implements IDhApiFramebuffer {
 	private final GlFramebuffer terrainFramebuffer;
 	private final GlFramebuffer translucentFramebuffer;
+	private final GlFramebuffer shadowFramebuffer;
 	private int attachedDepthTexture;
 
-	public DhFrameBufferWrapper(GlFramebuffer terrainFramebuffer, GlFramebuffer translucentFramebuffer) {
+	public DhFrameBufferWrapper(GlFramebuffer terrainFramebuffer, GlFramebuffer translucentFramebuffer, GlFramebuffer shadowFramebuffer) {
 		this.terrainFramebuffer = terrainFramebuffer;
 		this.translucentFramebuffer = translucentFramebuffer;
+		this.shadowFramebuffer = shadowFramebuffer;
+	}
+
+	private boolean inShadowPass() {
+		return shadowFramebuffer != null && ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 	}
 
 	private GlFramebuffer currentFramebuffer() {
+		if (inShadowPass()) {
+			return shadowFramebuffer;
+		}
 		return DHCompat.isTransparentPass() ? translucentFramebuffer : terrainFramebuffer;
 	}
 
@@ -27,6 +37,11 @@ public final class DhFrameBufferWrapper implements IDhApiFramebuffer {
 
 	@Override
 	public void bind() {
+		if (inShadowPass()) {
+			// The shadow map owns its depth; DH's own depth texture is not used here.
+			shadowFramebuffer.bind();
+			return;
+		}
 		GlFramebuffer framebuffer = currentFramebuffer();
 		int depthTexture = DHCompat.getDepthTexture();
 		if (depthTexture != 0 && depthTexture != attachedDepthTexture) {

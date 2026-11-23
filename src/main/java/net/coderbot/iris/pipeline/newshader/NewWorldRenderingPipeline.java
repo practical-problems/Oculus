@@ -1183,6 +1183,18 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		return dhFallbackFramebuffer == null ? -1 : dhFallbackFramebuffer.getId();
 	}
 
+	public boolean hasShadowRenderTargets() {
+		return shadowRenderTargets != null;
+	}
+
+	/** Framebuffer for the pack's dh_shadow program: writes into the shadow map targets. */
+	public GlFramebuffer createDHShadowFramebuffer(ProgramSource source) {
+		if (shadowRenderTargets == null) {
+			return null;
+		}
+		return shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), source.getDirectives().getDrawBuffers());
+	}
+
 	public GlFramebuffer createDHFramebuffer(ProgramSource source, boolean translucent) {
 		return renderTargets.createDHFramebuffer(translucent ? flippedAfterTranslucent : flippedAfterPrepare, source.getDirectives().getDrawBuffers());
 	}

@@ -46,6 +46,7 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 
 	private final ProgramState solid;
 	private final ProgramState translucent;
+	private final ProgramState shadow;
 	private final int vao;
 	private final boolean separateVertexBinding;
 	private boolean vertexFormatInitialized;
@@ -57,9 +58,10 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 	private boolean cullingMatrixReady;
 	private ProgramState active;
 
-	private IrisLodRenderProgram(ProgramState solid, ProgramState translucent) {
+	private IrisLodRenderProgram(ProgramState solid, ProgramState translucent, ProgramState shadow) {
 		this.solid = solid;
 		this.translucent = translucent;
+		this.shadow = shadow;
 		this.active = solid;
 		this.vao = GL30C.glGenVertexArrays();
 		this.separateVertexBinding = GL.getCapabilities().OpenGL43
@@ -67,12 +69,15 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 	}
 
 	public static IrisLodRenderProgram create(ProgramSource terrain, Optional<ProgramSource> water,
-			NewWorldRenderingPipeline pipeline) {
-		ProgramState solid = ProgramState.create(terrain, pipeline.getSodiumTerrainPipeline());
+			Optional<ProgramSource> shadowSource, NewWorldRenderingPipeline pipeline) {
+		ProgramState solid = ProgramState.create(terrain, pipeline.getSodiumTerrainPipeline(), false);
 		ProgramState translucent = water.isPresent()
-			? ProgramState.create(water.get(), pipeline.getSodiumTerrainPipeline())
+			? ProgramState.create(water.get(), pipeline.getSodiumTerrainPipeline(), false)
 			: solid;
-		return new IrisLodRenderProgram(solid, translucent);
+		ProgramState shadow = shadowSource.isPresent()
+			? ProgramState.create(shadowSource.get(), pipeline.getSodiumTerrainPipeline(), true)
+			: null;
+		return new IrisLodRenderProgram(solid, translucent, shadow);
 	}
 
 	@Override
@@ -90,6 +95,9 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 		solid.destroy();
 		if (translucent != solid) {
 			translucent.destroy();
+		}
+		if (shadow != null) {
+			shadow.destroy();
 		}
 		GL30C.glDeleteVertexArrays(vao);
 	}
@@ -111,6 +119,11 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 
 	@Override
 	public void fillUniformData(DhApiRenderParam param) {
+		if (shadow != null && net.coderbot.iris.shadows.ShadowRenderingState.areShadowsCurrentlyBeingRendered()
+				&& net.coderbot.iris.pipeline.ShadowRenderer.PROJECTION != null && net.coderbot.iris.pipeline.ShadowRenderer.MODELVIEW != null) {
+			fillShadowUniformData(param);
+			return;
+		}
 		active = param.renderPass == EDhApiRenderPass.TRANSPARENT ? translucent : solid;
 		Matrix4f projection = DHCompat.createProjectionMatrix(param);
 		Matrix4f modelView = DHCompat.getModelViewMatrix(param);
@@ -125,6 +138,28 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 		GL30C.glBindVertexArray(vao);
 		active.updateResources();
 
+		setMatrix(active.projection, projection);
+		setMatrix(active.projectionInverse, projectionInverseScratch);
+		setMatrix(active.modelView, modelView);
+		setMatrix(active.modelViewInverse, modelViewInverseScratch);
+		setMatrix(active.normalMatrix, normalMatrixScratch);
+		setMatrix(active.dhProjection, projection);
+		setMatrix(active.dhProjectionInverse, projectionInverseScratch);
+		setFloat(active.worldYOffset, param.worldYOffset);
+		setFloat(active.microOffset, 0.01F);
+	}
+
+	/** Shadow pass: the sun's matrices, no history/culling bookkeeping (those belong to the camera view). */
+	private void fillShadowUniformData(DhApiRenderParam param) {
+		active = shadow;
+		Matrix4f projection = ((net.coderbot.iris.shadows.Matrix4fAccess) (Object) net.coderbot.iris.pipeline.ShadowRenderer.PROJECTION).convertToJOML();
+		Matrix4f modelView = ((net.coderbot.iris.shadows.Matrix4fAccess) (Object) net.coderbot.iris.pipeline.ShadowRenderer.MODELVIEW).convertToJOML();
+		projectionInverseScratch.set(projection).invert();
+		modelViewInverseScratch.set(modelView).invert();
+		normalMatrixScratch.set(modelViewInverseScratch).transpose();
+		active.bind();
+		GL30C.glBindVertexArray(vao);
+		active.updateResources();
 		setMatrix(active.projection, projection);
 		setMatrix(active.projectionInverse, projectionInverseScratch);
 		setMatrix(active.modelView, modelView);
@@ -201,6 +236,7 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 
 	private static final class ProgramState {
 		private final int id;
+		private final boolean shadowProgram;
 		private final ProgramUniforms uniforms;
 		private net.coderbot.iris.uniforms.custom.CustomUniforms customUniforms;
 		private final ProgramSamplers samplers;
@@ -218,9 +254,10 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 		private final int dhProjection;
 		private final int dhProjectionInverse;
 
-		private ProgramState(int id, ProgramUniforms uniforms, ProgramSamplers samplers, ProgramImages images,
+		private ProgramState(int id, boolean shadowProgram, ProgramUniforms uniforms, ProgramSamplers samplers, ProgramImages images,
 				ProgramSource source) {
 			this.id = id;
+			this.shadowProgram = shadowProgram;
 			this.uniforms = uniforms;
 			this.samplers = samplers;
 			this.images = images;
@@ -244,7 +281,7 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 			dhProjectionInverse = uniform("dhProjectionInverse");
 		}
 
-		private static ProgramState create(ProgramSource source, SodiumTerrainPipeline pipeline) {
+		private static ProgramState create(ProgramSource source, SodiumTerrainPipeline pipeline, boolean shadowProgram) {
 			Map<PatchShaderType, String> transformed = TransformPatcher.patchDH(
 				source.getVertexSource().orElseThrow(IllegalStateException::new),
 				source.getGeometrySource().orElse(null),
@@ -268,7 +305,9 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 			}
 
 			ProgramUniforms.Builder builder = pipeline.initUniforms(id);
-			ProgramState state = new ProgramState(id, builder.buildUniforms(), pipeline.initTerrainSamplers(id), pipeline.initTerrainImages(id), source);
+			ProgramState state = new ProgramState(id, shadowProgram, builder.buildUniforms(),
+				shadowProgram ? pipeline.initShadowSamplers(id) : pipeline.initTerrainSamplers(id),
+				shadowProgram ? pipeline.initShadowImages(id) : pipeline.initTerrainImages(id), source);
 			state.customUniforms = pipeline.getCustomUniforms();
 			state.customUniforms.mapholderToPass(builder, state);
 			return state;
@@ -280,7 +319,9 @@ public final class IrisLodRenderProgram implements IDhApiShaderProgram {
 
 		private void bind() {
 			GlStateManager._glUseProgram(id);
-			if (DHCompat.isTransparentPass()) {
+			if (shadowProgram) {
+				BlendModeOverride.OFF.apply();
+			} else if (DHCompat.isTransparentPass()) {
 				(blend != null ? blend : DEFAULT_TRANSLUCENT_BLEND).apply();
 				for (BufferBlendOverride bufferBlend : bufferBlends) {
 					bufferBlend.apply();

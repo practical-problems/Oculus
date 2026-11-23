@@ -10,12 +10,16 @@ import net.coderbot.iris.compat.dh.DHCompat;
 @Mixin(targets = "com.seibel.distanthorizons.common.render.openGl.GlDhMetaRenderer_forge", remap = false)
 public class MixinDHFramebufferClear {
 	@ModifyArg(
-		method = {"setGLState", "clearDhDepthAndColorTextures"},
+		method = {"setGLState", "clearDhDepthAndColorTextures", "runRenderPassCleanup"},
 		at = @At(value = "INVOKE", target = "Lcom/seibel/distanthorizons/lwjgl/ILWJGLService;glClear(I)V"),
 		index = 0,
 		require = 0
 	)
 	private int oculus$preserveShaderPackColorTargets(int mask) {
+		if (DHCompat.isRenderingDhShadows()) {
+			// Never clear the shadow map: vanilla terrain is already in it.
+			return 0;
+		}
 		return DHCompat.isActive() ? mask & ~GL11C.GL_COLOR_BUFFER_BIT : mask;
 	}
 }

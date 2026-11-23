@@ -16,7 +16,7 @@ public class MixinDHShadowPassGuard {
 		cancellable = true
 	)
 	private void oculus$skipDhWithoutShadowProgram(CallbackInfo ci) {
-		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+		if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() && !DHCompat.hasShadowProgram()) {
 			ci.cancel();
 		}
 	}

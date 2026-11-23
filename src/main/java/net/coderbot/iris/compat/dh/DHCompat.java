@@ -47,6 +47,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 	private final DhFrameBufferWrapper framebufferWrapper;
 	private final GlFramebuffer terrainFramebuffer;
 	private final GlFramebuffer translucentFramebuffer;
+	private final GlFramebuffer shadowFramebuffer;
 	private final boolean disableDhClouds;
 	private DepthTexture depthTextureNoTranslucents;
 	private int depthTextureWidth = -1;
@@ -67,15 +68,18 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 			framebufferWrapper = null;
 			terrainFramebuffer = null;
 			translucentFramebuffer = null;
+			shadowFramebuffer = null;
 			return;
 		}
 
-		shaderProgram = IrisLodRenderProgram.create(terrain.get(), programs.getDhWater(), pipeline);
+		Optional<ProgramSource> shadowSource = pipeline.hasShadowRenderTargets() ? programs.getDhShadow() : Optional.empty();
+		shaderProgram = IrisLodRenderProgram.create(terrain.get(), programs.getDhWater(), shadowSource, pipeline);
 		terrainFramebuffer = pipeline.createDHFramebuffer(terrain.get(), false);
 		translucentFramebuffer = programs.getDhWater()
 			.map(source -> pipeline.createDHFramebuffer(source, true))
 			.orElse(terrainFramebuffer);
-		framebufferWrapper = new DhFrameBufferWrapper(terrainFramebuffer, translucentFramebuffer);
+		shadowFramebuffer = shadowSource.map(pipeline::createDHShadowFramebuffer).orElse(null);
+		framebufferWrapper = new DhFrameBufferWrapper(terrainFramebuffer, translucentFramebuffer, shadowFramebuffer);
 		active = this;
 		projectionHistory.reset();
 		modelViewHistory.reset();
@@ -146,6 +150,10 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 	public static void setRenderPass(EDhApiRenderPass renderPass) {
 		transparentPass = renderPass == EDhApiRenderPass.TRANSPARENT;
 		applyDhConfigOverrides();
+		if (isRenderingDhShadows()) {
+			// Shadow pass: no camera depth copy / bookkeeping.
+			return;
+		}
 		if (depthTexture == 0) {
 			refreshDepthTexture();
 		}
@@ -207,6 +215,15 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 
 	public static boolean isActive() {
 		return active != null;
+	}
+
+	/** True when the pack provides dh_shadow, so LODs should be drawn into the shadow map. */
+	public static boolean hasShadowProgram() {
+		return active != null && active.shadowFramebuffer != null;
+	}
+
+	public static boolean isRenderingDhShadows() {
+		return hasShadowProgram() && net.coderbot.iris.shadows.ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 	}
 
 	public static int getDepthTexture() {

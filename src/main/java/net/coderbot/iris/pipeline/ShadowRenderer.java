@@ -75,6 +75,8 @@ public class ShadowRenderer {
 	private final float intervalSize;
 	private final Float fov;
 	public static Matrix4f MODELVIEW;
+	/** The projection used for the shadow pass this frame (read by the Distant Horizons shadow integration). */
+	public static Matrix4f PROJECTION;
 
 	private final ShadowRenderTargets targets;
 	private final ShadowCullState packCullingState;
@@ -440,6 +442,7 @@ public class ShadowRenderer {
 		((Matrix4fAccess) (Object) shadowProjection).copyFromArray(projMatrix);
 
 		IrisRenderSystem.setShadowProjection(shadowProjection);
+		PROJECTION = shadowProjection.copy();
 
 		// Disable backface culling
 		// This partially works around an issue where if the front face of a mountain isn't visible, it casts no
