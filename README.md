@@ -2,27 +2,29 @@
   <img src="banner.png">
 </p>
 
-# Oculus
-[![](http://cf.way2muchnoise.eu/short_oculus_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/oculus)
-[![](http://cf.way2muchnoise.eu/versions/Available%20for_oculus_full.svg)](https://www.curseforge.com/minecraft/mc-mods/oculus/files)
+# Spectacles
+Spectacles is an unofficial fork of [Oculus](https://github.com/Asek3/Oculus) (the Forge port of ["Iris"](https://www.curseforge.com/minecraft/mc-mods/irisshaders))
+for Forge 1.19.2, focused on Distant Horizons. It was called Oculus until 2026-11-23; please don't report its issues to Oculus or Iris.
 
-Oculus is an Unofficial Fork of ["Iris"](https://www.curseforge.com/minecraft/mc-mods/irisshaders), made to work with Forge Mod Loader.
+Only the names people see changed (display name, jar file name, log/F3 prefix). The mod ID is still `oculus`, the Java packages
+are still `net.coderbot.iris`, and the version label still starts with `1.8.0`, so Distant Horizons, Oculus Flywheel Compat and
+other mods that look for Oculus keep working. Existing settings files (`config/oculus*.properties`) are kept.
 
 ## TL;DR:
-Oculus 1.6.9 for Forge 1.19.2 with the Distant Horizons 3.3.3 support of Oculus 1.8.0 backported: LODs with shaders, LOD shadows,
+Spectacles is Oculus 1.6.9 for Forge 1.19.2 with the Distant Horizons 3.3.3 support of Oculus 1.8.0 backported: LODs with shaders, LOD shadows,
 DH beacon beams and clouds. Tested with Complementary + Euphoria, Photon, Bliss and Sildur's Vibrant ([TEST_RESULTS.md](TEST_RESULTS.md)).
 Dev branch only: optional optimizations from Emberlens and a CPU/GPU timing overlay on a new Experimental page (all off by default, not yet tested).
 
 ## Disclaimer
-Oculus is not and never will be compatible with Optifine!
+Like Oculus, Spectacles is not compatible with OptiFine.
 
 ## Dependencies
-Oculus requires [Rubidium](https://www.curseforge.com/minecraft/mc-mods/rubidium) made by Asek3, or its maintained fork
+Spectacles requires [Rubidium](https://www.curseforge.com/minecraft/mc-mods/rubidium) made by Asek3, or its maintained fork
 [Embeddium](https://www.curseforge.com/minecraft/mc-mods/embeddium). All testing of this fork used Embeddium 0.3.18.1 for 1.19.2.
 
 ## Notes
 
-This is a fork of Teqed's `1.19.2` branch (Oculus 1.6.9) to make **Distant Horizons 3.3.3** work with Oculus on Forge 1.19.2.
+This is a fork of Teqed's `1.19.2` branch (Oculus 1.6.9) to make **Distant Horizons 3.3.3** work with shaders on Forge 1.19.2.
 The version label says "1.8.0" only so DH's version check passes (the mod itself is based on 1.6.9).
 
 **Status:** DH LODs render with shaders on. This branch adds `dh_terrain` and `dh_water` programs, the `dhDepthTex`/`dhDepthTex1`

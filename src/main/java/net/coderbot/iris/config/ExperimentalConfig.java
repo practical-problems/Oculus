@@ -225,7 +225,7 @@ public final class ExperimentalConfig {
 		}
 		Path path = path();
 		try (OutputStream out = Files.newOutputStream(path)) {
-			properties.store(out, "Oculus experimental options (global). Everything off = stock behaviour.");
+			properties.store(out, Iris.MODNAME + " experimental options (global). Everything off = stock behaviour.");
 		} catch (IOException e) {
 			Iris.logger.error("Could not write " + path, e);
 		}

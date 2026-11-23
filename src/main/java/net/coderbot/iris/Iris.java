@@ -64,7 +64,8 @@ public class Iris {
 	 * easy branding changes (for forks). You'll still need to change this
 	 * separately in mixin plugin classes & the language files.
 	 */
-	public static final String MODNAME = "Oculus";
+	// Display name only (F3, log prefix, shader screen). The mod ID stays "oculus" (MODID) for compatibility.
+	public static final String MODNAME = "Spectacles";
 
 	public static final IrisLogging logger = new IrisLogging(MODNAME);
 

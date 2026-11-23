@@ -2,6 +2,13 @@
 
 Handoff notes from a long chat session. Read this first.
 
+**Name (dev branch, 2026-11-23): the mod is now called "Spectacles".** Changed: `mods.toml` displayName/description,
+`archives_base_name = spectacles` (jar `spectacles-mc1.19.2-...`), `Iris.MODNAME` (F3 lines, shader screen corner text, log
+prefix `[Spectacles/]` instead of `[Oculus/]`, timing overlay header, DH config caller name), README title/intro (Oculus banner
+kept on purpose). Kept for compatibility: mod ID `oculus` (`Iris.MODID`, config file names), packages `net.coderbot.iris`,
+mixin config names, `mod_label` starting with `1.8.0`, shader macros. GitHub repository rename is the user's to do.
+Older logs and notes below say `[Oculus/]`.
+
 ## Goal
 Make a 1.19.2 Forge Oculus (Iris 1.6.x line, package `net.coderbot.iris`) work well with Distant Horizons (DH).
 Stage 1 (done as a patched jar, now being moved to source): LODs render with shaders on/off, no underground light leak.

@@ -232,7 +232,7 @@ public final class PassTiming {
 
 	private static void updateOverlay() {
 		List<String[]> rows = new ArrayList<>();
-		rows.add(new String[] {"Oculus timing (avg ms)", "CPU", "GPU"});
+		rows.add(new String[] {Iris.MODNAME + " timing (avg ms)", "CPU", "GPU"});
 		boolean any = false;
 		for (Pass pass : Pass.values()) {
 			Timer t = TIMERS[pass.ordinal()];
@@ -281,7 +281,7 @@ public final class PassTiming {
 		List<String[]> rows = overlayRows;
 		if (rows.isEmpty()) {
 			rows = new ArrayList<>();
-			rows.add(new String[] {"Oculus timing: waiting for shader pack frames", "", ""});
+			rows.add(new String[] {Iris.MODNAME + " timing: waiting for shader pack frames", "", ""});
 		}
 		PoseStack poseStack = event.getPoseStack();
 		Font font = minecraft.font;

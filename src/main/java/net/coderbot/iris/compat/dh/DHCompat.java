@@ -34,7 +34,7 @@ import net.coderbot.iris.vendored.joml.Matrix4f;
 public final class DHCompat implements DHCompatBridge.Lifecycle {
 	private static final float[] IDENTITY = new Matrix4f().get(new float[16]);
 	/** Shown by DH as the mod that set its SSAO and fog options; the one-argument setValue is deprecated in DH 3.3. */
-	private static final String DH_API_CALLER = "Oculus";
+	private static final String DH_API_CALLER = Iris.MODNAME;
 	private static DHCompat active;
 	private static final float[] projection = new Matrix4f().get(new float[16]);
 	private static final float[] projectionInverse = new Matrix4f().get(new float[16]);
