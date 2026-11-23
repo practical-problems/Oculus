@@ -164,7 +164,8 @@ Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported 
 ## Other fixes
 - `FullyBufferedMultiBufferSource.getBuffer` throws IllegalArgumentException for a null RenderType (and IllegalStateException if a
   wrapping function returns null), so crashes like Asek3/Oculus#874 name the calling mod. No mod in the user's pack passes null;
-  only a regression check (normal entity rendering) is possible.
+  only a regression check (normal entity rendering) is possible. Done 2026-11-23 (build 20261123-1736, Bliss and Photon):
+  chests, anvils, furnaces fine, no Oculus errors.
 
 ## Lifecycle edge cases (code review 2026-11-23, not yet tested in game)
 - Dimension change: MixinMinecraft_PipelineManagement destroys all pipelines and builds a new one, so DHCompat.destroy() unbinds
