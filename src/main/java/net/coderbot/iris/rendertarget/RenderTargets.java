@@ -148,7 +148,9 @@ public class RenderTargets {
 
 	public boolean resizeIfNeeded(int newDepthBufferVersion, int newDepthTextureId, int newWidth, int newHeight, DepthBufferFormat newDepthFormat, PackDirectives packDirectives) {
 		boolean recreateDepth = false;
-		if (cachedDepthBufferVersion != newDepthBufferVersion) {
+		// Also when only the texture id changed (fix from Emberlens): a mod that replaces the main depth texture
+		// without bumping the version would otherwise leave our framebuffers on the old, deleted texture.
+		if (cachedDepthBufferVersion != newDepthBufferVersion || currentDepthTexture != newDepthTextureId) {
 			recreateDepth = true;
 			currentDepthTexture = newDepthTextureId;
 			cachedDepthBufferVersion = newDepthBufferVersion;
