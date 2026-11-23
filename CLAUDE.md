@@ -48,7 +48,7 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
 9. `dhRenderDistance`/`dhNearPlane`/`dhFarPlane` moved to `generalCommonUniforms` so properties expressions see them (Photon was black).
 10. `shadowNearPlane`/`shadowFarPlane` (Iris 1.7+): the base hard-coded the shadow depth range to 0.05..256, clipping distant LODs from the
    shadow map. -1 resolves to +/- DH render distance (old values without DH); `shadowProjection` uniform uses the same matrix.
-   Pushed 2026-11-22, NOT yet built or tested in game.
+   Built 2026-11-23; log confirms -1 resolves to +/-2048 (DH 128 chunks) at render time.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
@@ -106,8 +106,13 @@ See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 
 ## Test checklist (the user tests on a backup world)
 Results 2026-11-23 (build `...20261123-1201`): no Oculus/DH errors; caves dark with Bliss LOD shadows on; Sildur's Vibrant 1.541 has full
 DH support; Complementary r5.10 + Euphoria 1.11.2 fine; LODs block Bliss's light shafts. Far LOD shadows NOT visible even with Bliss shadow
-distance 128 chunks: next step is the `Shadow map: distance ... depth range ...` log line (added after that build). Not yet tested: a pack
-without `dh_terrain` (LOD hiding), Oculus Flywheel Compat.
+distance 128 chunks. The first-frame log then showed `distance 2048.0 blocks, depth range -2048.0 .. 2048.0 (pack values -1.0 / -1.0)`
+(DH render distance 128 chunks), i.e. the same as real 1.8.0, and the dh_shadow path was compared with 1.8.0 piece by piece (matches;
+only differences: no shadow-frustum culling, pack DRAWBUFFERS instead of forced 0/1, DH's worldYOffset instead of -1000). Weak far
+shadows are most likely Bliss's experimental DH shadowmap mode (log-distorted shadow map over 2048 blocks). Definitive check would be
+Bliss + DH on real Iris. Not yet tested: a pack without `dh_terrain` (LOD hiding), Oculus Flywheel Compat.
+One intermittent crash on Save and Quit: `NoClassDefFoundError: DhApiWorldUnloadEvent` in DH's `SharedApi.setDhWorld` (class is in the
+jar). Not in Oculus code; suspects: Java 24 on Forge 43, Redirector/ModernFix interaction, DH bug. Watch for repeats.
 - Loads to the main menu and into the world with DH 3.3.3 and Complementary Reimagined / Euphoria Patches.
 - LODs visible with shaders on and off; no underground light leak; MekaSuit renders; Mekanism flamethrower does not crash.
 - Known gaps: LOD shadows only with packs that ship `dh_shadow` (Bliss with its DH shadowmap option); DH clouds/beacons unsupported
