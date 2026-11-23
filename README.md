@@ -10,7 +10,7 @@ Oculus is an Unofficial Fork of ["Iris"](https://www.curseforge.com/minecraft/mc
 
 ## TL;DR:
 Distant Horizons 3.3.3 LODs render with shaders on and the pack can see LOD depth (clouds and fog draw behind LODs), but this is **not feature complete**.
-Tested in game with Complementary Reimagined + Euphoria Patches: LODs, MekaSuit, Mekanism flamethrower and Create/Flywheel behaved; no underground light leak.
+Tested in game with Complementary Reimagined + Euphoria Patches: LODs, MekaSuit and the Mekanism flamethrower behaved; no underground light leak. Create contraptions with shaders are not tested yet.
 LOD shadows (`dh_shadow`) and DH clouds/beacons (generic rendering) are still missing.
 
 ## Disclaimer
