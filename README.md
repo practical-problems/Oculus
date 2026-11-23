@@ -136,11 +136,12 @@ These come from other mods or shader packs; they are listed so they are not repo
 Needs JDK 17 (JDK 21+ fails to compile). Put `libs/DistantHorizons-3.3.3-1.19.2-fabric-forge.jar` in `libs/` (compile-only), then `./gradlew build`.
 
 ## Credits
-- **Teqed**: the Oculus `1.19.2` branch this fork is based on.
-- **Asek3**: Oculus; its 1.20.1 Oculus 1.8.0 source is the reference for the DH backport, and its 1.19.2 branch the source of the Mekanism fixes.
+- **Teqed**: the [Oculus `1.19.2` branch](https://github.com/Teqed/Oculus/tree/1.19.2) this fork is based on.
+- **Asek3**: [Oculus](https://github.com/Asek3/Oculus); its 1.20.1 Oculus 1.8.0 source is the reference for the DH backport, and its 1.19.2 branch the source of the Mekanism fixes.
 - **Askadar**: the original DH version spoof.
-- **KostromDan**: the Mekalus fork (Mekanism and Flywheel fixes).
-- **PolarBearEs** and **fangyu-mc**: DH shader integration (PolarBearEs's Oculus fork, built on fangyu-mc's oculus-dh3-compat).
+- **KostromDan**: the [Mekalus](https://www.curseforge.com/minecraft/mc-mods/mekalus-oculus-fork-with-fixed-mekanism-mekasuit) fork (Mekanism and Flywheel fixes).
+- **PolarBearEs** and **fangyu-mc**: DH shader integration ([PolarBearEs's Oculus fork](https://github.com/PolarBearEs/Oculus/tree/1.19.2),
+  built on fangyu-mc's [oculus-dh3-compat](https://github.com/fangyu-mc/oculus-dh3-compat)).
 - **shuttheirprayer**: [Emberlens](https://github.com/shuttheirprayer/Emberlens) (1.20.1 Oculus fork, LGPL-3.0-only), source of the
   experimental optimizations, the `RenderTargets` depth fix and the idea for the pass timing tool. Ported code is marked
   "(Emberlens)" in comments; [BACKPORT_CANDIDATES.md](BACKPORT_CANDIDATES.md) lists each change with its Emberlens commit.
