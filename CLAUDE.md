@@ -116,8 +116,18 @@ Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Ph
 ## What is missing (remaining backport)
 Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are done via the PolarBearEs merge. Still to do:
 1. **`dh_shadow` follow-ups.** Shadow-pass culling done and tested (commit 11).
-2. **Generic rendering (DH clouds/beacons):** `IrisGenericRenderProgram`, `DhApiBeforeGenericObjectRenderEvent`,
-   `DhApiBeforeGenericRenderSetupEvent`, `DHGenericTransformer`. Until then, turn DH's own cloud rendering off in DH config.
+2. **Generic rendering (DH clouds/beacons): implemented on the dev branch, untested in game.** Ported from 1.8.0
+   (reference clone: Asek3/Oculus `1.20.1-new`). `ProgramSet.getDhGeneric()` (`dh_generic`, else `dh_terrain` like 1.8.0's
+   `ProgramId.DhGeneric` fallback); `Patch.DH_GENERIC` + `DHGenericTransformer` (instanced unit box: attrib 0 vPosition vec3,
+   1 iris_color, 2 aScale, 3 aTranslateChunk ivec3, 4 aTranslateSubChunk, 5 aMaterial int; locations bound at link time since our
+   addIfNotExists has no layout qualifier; iris_NormalMatrix is mat4 like our terrain transformer); `IrisGenericRenderProgram`
+   (IDhApiGenericObjectShaderProgram; uniforms/samplers/images from SodiumTerrainPipeline like IrisLodRenderProgram; DHCompat's
+   LOD matrices so depth matches LODs; lightmap bound like 1.8.0; direct (non-instanced) path only logs a warning instead of 1.8.0's
+   exception). DHCompat binds it as an override (DH's own GlGenericObjectShaderProgram.overrideThisFrame() is always true, so binding
+   is the switch), binds the LOD terrain framebuffer (or a dh_generic framebuffer with DH depth) in DhApiBeforeGenericRenderSetupEvent,
+   and cancels every generic object during the LOD shadow pass (DH runs its generic renderer there too; 1.8.0 does not guard this).
+   If the program fails to build, DH keeps its own shader. Verified offline: the vendored glsl-transformer patches a legacy test
+   shader and Bliss/Photon dh_terrain without errors (harness: /tmp/tx with stubs for log4j/fastutil/LWJGL constants/annotations).
 3. (Done as commit 11: the four 1.8.0 frustum mixins are replaced by one `DhShadowCullingFrustum` wrapper.)
 4. Small fixes (tested 2026-11-23: Bliss loads, both warnings gone, no new ones): `program.X.enabled` values with `&&`/`||`/`!`/parentheses are now evaluated by
    `shaderpack/parsing/BooleanExpression` (names: boolean option, then defined macro, else true with a warning; unparsable -> enabled

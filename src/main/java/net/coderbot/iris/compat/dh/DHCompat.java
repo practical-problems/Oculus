@@ -6,6 +6,9 @@ import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiRenderPass;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiFogDrawMode;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericObjectRenderEvent;
+import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeGenericRenderSetupEvent;
+import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiGenericObjectShaderProgram;
+import com.seibel.distanthorizons.api.methods.events.sharedParameterObjects.DhApiEventParam;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiFramebuffer;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShadowCullingFrustum;
 import com.seibel.distanthorizons.api.interfaces.override.rendering.IDhApiShaderProgram;
@@ -52,6 +55,11 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 	private final GlFramebuffer translucentFramebuffer;
 	private final GlFramebuffer shadowFramebuffer;
 	private DhShadowCullingFrustum shadowCullingFrustum;
+	/** Draws DH's generic objects (clouds, beacon beams) through the pack; null if that failed or there is no dh_terrain. */
+	private IrisGenericRenderProgram genericProgram;
+	/** Only for a pack with its own dh_generic program; otherwise generic objects use the LOD terrain framebuffer. */
+	private GlFramebuffer genericFramebuffer;
+	private int genericFramebufferDepth;
 	private final boolean disableDhClouds;
 	private DepthTexture depthTextureNoTranslucents;
 	private int depthTextureWidth = -1;
@@ -98,12 +106,47 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 			shadowCullingFrustum = new DhShadowCullingFrustum();
 			OverrideInjector.INSTANCE.bind(IDhApiShadowCullingFrustum.class, shadowCullingFrustum);
 		}
+		createGenericProgram(pipeline, programs, terrain.get());
 		refreshDepthTexture();
 		applyDhConfigOverrides();
 		Iris.logger.info("Enabled Distant Horizons shader-pack GBuffer integration.");
 		Iris.logger.info(shadowFramebuffer != null
 			? "Distant Horizons LOD shadows enabled (dh_shadow)."
 			: "Distant Horizons LOD shadows off (no dh_shadow, dhShadow.enabled=false, or shadows disabled).");
+	}
+
+	/**
+	 * Oculus 1.8.0 draws DH's generic objects with the pack's dh_generic program, falling back to dh_terrain. If the
+	 * program cannot be built, DH keeps drawing them with its own shader (the old behaviour) and LODs are unaffected.
+	 */
+	private void createGenericProgram(NewWorldRenderingPipeline pipeline, ProgramSet programs, ProgramSource terrain) {
+		Optional<ProgramSource> ownGeneric = programs.getDhGeneric();
+		ProgramSource source = ownGeneric.orElse(terrain);
+		try {
+			genericProgram = IrisGenericRenderProgram.create(source, pipeline.getSodiumTerrainPipeline());
+		} catch (RuntimeException e) {
+			genericProgram = null;
+			Iris.logger.warn("Could not build the Distant Horizons generic object program from " + source.getName()
+				+ "; DH clouds and beacon beams keep DH's own shader.", e);
+			return;
+		}
+		genericFramebuffer = ownGeneric.isPresent() ? pipeline.createDHFramebuffer(source, false) : null;
+		OverrideInjector.INSTANCE.bind(IDhApiGenericObjectShaderProgram.class, genericProgram);
+		Iris.logger.info("Distant Horizons generic objects (clouds, beacon beams) use " + source.getName() + ".");
+	}
+
+	/** Called by DH before it draws generic objects: draw them into the pack's buffers, with DH's depth. */
+	private void bindGenericFramebuffer() {
+		if (genericFramebuffer == null) {
+			// Fallback to dh_terrain: same draw buffers as LOD terrain, so use the LOD framebuffer (with DH depth).
+			framebufferWrapper.bind();
+			return;
+		}
+		if (genericFramebufferDepth != depthTexture && depthTexture != 0) {
+			genericFramebuffer.addDepthAttachment(depthTexture);
+			genericFramebufferDepth = depthTexture;
+		}
+		genericFramebuffer.bind();
 	}
 
 	private static void bindCloudEventHandler() {
@@ -115,9 +158,27 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 			new DhApiBeforeGenericObjectRenderEvent() {
 				@Override
 				public void beforeRender(DhApiCancelableEventParam<EventParam> event) {
-					if (active != null && active.disableDhClouds
-							&& "Clouds".equalsIgnoreCase(event.value.resourceLocationPath)) {
+					if (active == null) {
+						return;
+					}
+					// DH also runs its generic renderer in the LOD shadow pass; clouds and beacon beams have no place
+					// in the pack's shadow map (and would be drawn there with a gbuffer program), so skip them.
+					if (net.coderbot.iris.shadows.ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
 						event.cancelEvent();
+						return;
+					}
+					if (active.disableDhClouds && "Clouds".equalsIgnoreCase(event.value.resourceLocationPath)) {
+						event.cancelEvent();
+					}
+				}
+			});
+		DhApi.events.bind(DhApiBeforeGenericRenderSetupEvent.class,
+			new DhApiBeforeGenericRenderSetupEvent() {
+				@Override
+				public void beforeSetup(DhApiEventParam<DhApiRenderParam> event) {
+					if (active != null && active.genericProgram != null
+							&& !net.coderbot.iris.shadows.ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+						active.bindGenericFramebuffer();
 					}
 				}
 			});
@@ -134,6 +195,11 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 		if (shadowCullingFrustum != null) {
 			OverrideInjector.INSTANCE.unbind(IDhApiShadowCullingFrustum.class, shadowCullingFrustum);
 			shadowCullingFrustum = null;
+		}
+		if (genericProgram != null) {
+			OverrideInjector.INSTANCE.unbind(IDhApiGenericObjectShaderProgram.class, genericProgram);
+			genericProgram.free();
+			genericProgram = null;
 		}
 		shaderProgram.free();
 		// These framebuffers are registered in RenderTargets.ownedFramebuffers and are

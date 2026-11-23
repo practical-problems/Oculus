@@ -24,6 +24,7 @@ public class ProgramSet implements ProgramSetInterface {
 	private final ProgramSource dhTerrain;
 	private final ProgramSource dhShadow;
 	private final ProgramSource dhWater;
+	private final ProgramSource dhGeneric;
 	private final ProgramSource[] shadowcomp;
 	private final ComputeSource[][] shadowCompCompute;
 	private final ProgramSource[] begin;
@@ -88,6 +89,7 @@ public class ProgramSet implements ProgramSetInterface {
 		this.dhTerrain = readProgramSource(directory, sourceProvider, "dh_terrain", this, shaderProperties);
 		this.dhWater = readProgramSource(directory, sourceProvider, "dh_water", this, shaderProperties);
 		this.dhShadow = readProgramSource(directory, sourceProvider, "dh_shadow", this, shaderProperties);
+		this.dhGeneric = readProgramSource(directory, sourceProvider, "dh_generic", this, shaderProperties);
 		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties,
 				BlendModeOverride.OFF);
 		this.shadowCompute = readComputeArray(directory, sourceProvider, "shadow");
@@ -232,6 +234,7 @@ public class ProgramSet implements ProgramSetInterface {
 		programs.add(dhTerrain);
 		programs.add(dhWater);
 		programs.add(dhShadow);
+		programs.add(dhGeneric);
 		programs.addAll(Arrays.asList(shadowcomp));
 		programs.addAll(Arrays.asList(begin));
 		programs.addAll(Arrays.asList(prepare));
@@ -315,6 +318,8 @@ public class ProgramSet implements ProgramSetInterface {
 	public Optional<ProgramSource> getDhTerrain() { return dhTerrain.requireValid(); }
 	public Optional<ProgramSource> getDhWater() { return dhWater.requireValid(); }
 	public Optional<ProgramSource> getDhShadow() { return dhShadow.requireValid(); }
+	/** The pack's own dh_generic program, if any. Callers fall back to dh_terrain, as Oculus 1.8.0 does. */
+	public Optional<ProgramSource> getDhGeneric() { return dhGeneric.requireValid(); }
 
 	public Optional<ProgramSource> getShadow() {
 		return shadow.requireValid();

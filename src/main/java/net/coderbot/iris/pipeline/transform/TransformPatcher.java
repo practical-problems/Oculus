@@ -219,6 +219,11 @@ public class TransformPatcher {
 							versionStatement.profile = Profile.CORE;
 							DHTerrainTransformer.transform(transformer, tree, root, parameters);
 							break;
+						case DH_GENERIC:
+							if (version.number < 330) versionStatement.version = Version.GLSL33;
+							versionStatement.profile = Profile.CORE;
+							net.coderbot.iris.pipeline.transform.transformer.DHGenericTransformer.transform(transformer, tree, root, parameters);
+							break;
 						case ATTRIBUTES:
 							AttributeTransformer.transform(transformer, tree, root, (AttributeParameters) parameters);
 							break;
@@ -293,6 +298,11 @@ public class TransformPatcher {
 
 	public static Map<PatchShaderType, String> patchDH(String vertex, String geometry, String fragment) {
 		return transform(vertex, geometry, fragment, new net.coderbot.iris.pipeline.transform.parameter.DHParameters());
+	}
+
+	public static Map<PatchShaderType, String> patchDHGeneric(String vertex, String geometry, String fragment) {
+		return transform(vertex, geometry, fragment,
+			new net.coderbot.iris.pipeline.transform.parameter.DHParameters(Patch.DH_GENERIC));
 	}
 
 	private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
