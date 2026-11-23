@@ -167,7 +167,7 @@ Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported 
   only a regression check (normal entity rendering) is possible. Done 2026-11-23 (build 20261123-1736, Bliss and Photon):
   chests, anvils, furnaces fine, no Oculus errors.
 
-## Lifecycle edge cases (code review 2026-11-23; Nether entry tested)
+## Lifecycle edge cases (code review 2026-11-23; Nether entry tested; testing closed)
 - Dimension change: MixinMinecraft_PipelineManagement destroys all pipelines and builds a new one, so DHCompat.destroy() unbinds
   its DH overrides and a fresh DHCompat binds new ones. Only a mod rendering several dimensions at once (Immersive Portals) could leave
   a cached pipeline whose DHCompat is no longer `active` (DH's OverrideInjector.bind replaces same-priority overrides); not on 1.19.2 Forge.
@@ -181,6 +181,8 @@ Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported 
   no com.seibel imports outside compat/dh; mods.toml has no DH dependency.
 - Shader toggles: destroy() frees LOD/generic programs, VAO and depth copy; DH framebuffers are owned by RenderTargets.
 - Minimize: copyOpaqueDepth skips zero-size windows.
+- Not tested in game by the user's decision: the End (same path as the Nether), launch without DH, shaders-off null check,
+  minimize/restore, multiplayer. Nether with DH generating can flood the log with YUNG's "broken basalt columns" warnings (not ours).
 
 ## References (clone read-only)
 - `Asek3/Oculus` branch **`1.20.1-new`** (mod 1.8.0, 2025-05): the real 1.8.0 source. Primary blueprint for the DH 3.x integration.

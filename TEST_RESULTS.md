@@ -94,3 +94,8 @@ three packs ships `dh_generic`, so all use their `dh_terrain` program (logged on
 | Sildur's Vibrant 1.541, Complementary r5.10 + Euphoria 1.11.2, Photon v1.3b | Pass: render correctly with LODs |
 | `program.X.enabled` expressions (Bliss `TRANSLUCENT_ENTITIES && IS_IRIS`) | Pass: Bliss loads, its six "defaulting to true" warnings are gone, no new warnings |
 | DH config overrides with caller name | Pass: DH's deprecated-API warning is gone |
+| Overworld -> Nether (Photon) | Pass: pipeline rebuilt, DH integration re-enabled, no errors. Prism's console stopped at 100,000 lines afterwards: 85,000 "broken basalt columns" warnings from YUNG's Better Dungeons/Better Nether Fortresses on DH's world-gen threads while it built Nether LODs (not Oculus; the game kept running) |
+
+Not tested in game, by decision (2026-11-23): the End (same code path as the Nether), launching without DH (DH code only loads
+when DH is in the mod list), shaders-off chests for the null check (shaders off is the default path), minimize/restore, and
+multiplayer (client-side only; a server would only matter to DH). All reviewed in code; see CLAUDE.md "Lifecycle edge cases".
