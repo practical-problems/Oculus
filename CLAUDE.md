@@ -7,6 +7,7 @@ Handoff notes from a long chat session. Read this first.
 prefix `[Spectacles/]` instead of `[Oculus/]`, timing overlay header, DH config caller name), README title/intro (Oculus banner
 kept on purpose). Kept for compatibility: mod ID `oculus` (`Iris.MODID`, config file names), packages `net.coderbot.iris`,
 mixin config names, `mod_label` starting with `1.8.0`, shader macros. GitHub repository rename is the user's to do.
+Release plan (user, 2026-11-23): no release from stable for now. First release = Spectacles 1.0.0 with everything on dev (rename + experimental page) once the experimental page is tested; then move dev to stable, tag `v1.0.0`, draft a GitHub release (user builds and attaches the jar).
 Older logs and notes below say `[Oculus/]`.
 
 ## Goal
