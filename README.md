@@ -49,7 +49,7 @@ with shaders, because DH classifies them as illuminated; add them to DH's ignore
 turn DH cloud rendering off.
 
 Not implemented yet: generic rendering (DH clouds/beacons; turn DH's own cloud rendering off).
-Backporting the rest of the real Oculus 1.8.0 DH support is ongoing.
+Backporting the rest of the real Oculus 1.8.0 DH support is ongoing. In-game test results are in [TEST_RESULTS.md](TEST_RESULTS.md).
 
 ### Changes
 - DH shader integration from PolarBearEs's `Oculus` fork (itself based on fangyu-mc's `oculus-dh3-compat`): DH programs, depth
