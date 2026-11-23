@@ -19,7 +19,8 @@ get LOD depth, DH programs, uniforms and shadows, like the real Oculus 1.8.0 on 
   colortex0 with no depth, no DH programs, no DH uniforms/macros. That is the whole gap.
 
 ## Branch and status (`dh-shadow`, on top of `dh-fallback-copy` and `stacia-dh-merge`)
-Builds with JDK 17 and was tested in game (Complementary Reimagined + Euphoria Patches, DH 3.3.3). Not yet tested: Create contraptions with shaders.
+Builds with JDK 17 and was tested in game (Complementary Reimagined + Euphoria Patches, DH 3.3.3). Create with shaders works (user-confirmed).
+Not yet tested: Oculus Flywheel Compat (`oculus-flywheel-compat-forge1.19.2+1.0.3b`, disabled in the user's pack) with this tree; it mixes into Oculus, so test it alone.
 Working: LODs with shaders on/off, pack sees LOD depth (clouds/fog behind LODs), smaller chunk/LOD seam, no underground light leak,
 MekaSuit, Mekanism flamethrower. Commits, oldest first:
 1. Mekanism MekaSuit/flame fixes ported from Asek3/Oculus `1.19.2` (`ProgramId.ShadowEntities`, `ShaderKey.MEKANISM_FLAME(+_SHADOW)`,
