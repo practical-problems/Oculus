@@ -30,6 +30,8 @@ import net.coderbot.iris.vendored.joml.Matrix4f;
 
 public final class DHCompat implements DHCompatBridge.Lifecycle {
 	private static final float[] IDENTITY = new Matrix4f().get(new float[16]);
+	/** Shown by DH as the mod that set its SSAO and fog options; the one-argument setValue is deprecated in DH 3.3. */
+	private static final String DH_API_CALLER = "Oculus";
 	private static DHCompat active;
 	private static final float[] projection = new Matrix4f().get(new float[16]);
 	private static final float[] projectionInverse = new Matrix4f().get(new float[16]);
@@ -202,8 +204,8 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 			return;
 		}
 		if (!configOverridesApplied && DhApi.Delayed.configs != null) {
-			DhApi.Delayed.configs.graphics().ambientOcclusion().enabled().setValue(false);
-			DhApi.Delayed.configs.graphics().fog().drawMode().setValue(EDhApiFogDrawMode.FOG_DISABLED);
+			DhApi.Delayed.configs.graphics().ambientOcclusion().enabled().setValue(false, DH_API_CALLER);
+			DhApi.Delayed.configs.graphics().fog().drawMode().setValue(EDhApiFogDrawMode.FOG_DISABLED, DH_API_CALLER);
 			configOverridesApplied = true;
 		}
 		if (!transparentDeferralApplied && DhApi.Delayed.renderProxy != null) {

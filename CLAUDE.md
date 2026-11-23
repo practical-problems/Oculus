@@ -119,8 +119,12 @@ Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are do
 2. **Generic rendering (DH clouds/beacons):** `IrisGenericRenderProgram`, `DhApiBeforeGenericObjectRenderEvent`,
    `DhApiBeforeGenericRenderSetupEvent`, `DHGenericTransformer`. Until then, turn DH's own cloud rendering off in DH config.
 3. (Done as commit 11: the four 1.8.0 frustum mixins are replaced by one `DhShadowCullingFrustum` wrapper.)
-4. Small: `program.X.enabled = A && B` is read as one option name (Bliss logs "unknown option ... defaulting to true"); DH logs a
-   deprecated-config-API warning for `enableSsao`/`enableDhFog` set by `DHCompat`.
+4. Small fixes (dev branch, untested in game): `program.X.enabled` values with `&&`/`||`/`!`/parentheses are now evaluated by
+   `shaderpack/parsing/BooleanExpression` (names: boolean option, then defined macro, else true with a warning; unparsable -> enabled
+   with a warning; single names keep the old path). Oculus 1.8.0 reads them as one option name. Bliss's `TRANSLUCENT_ENTITIES && IS_IRIS`
+   now disables its translucent entity/block programs while that option is off (its default). Evaluator verified with hand-written cases
+   (precedence, parentheses, negation, defined(), numbers, unknown names, 19 malformed inputs) and 20,000 random expressions compared with
+   Python. DH config overrides now pass the caller name "Oculus" (DH 3.3's two-argument `setValue`), removing the deprecated-API warning.
 Do not port the whole Iris 1.7 refactor (package `net.irisshaders`). Port only DH pieces, adapted to `net.coderbot.iris` classes.
 See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 3.3.3, so its DH-facing code is API-compatible.
 

@@ -213,10 +213,12 @@ public class ShaderPack {
 		List<String> disabledPrograms = new ArrayList<>();
 		this.profile.current.ifPresent(profile -> disabledPrograms.addAll(profile.disabledPrograms));
 		// Add programs that are disabled by shader options
+		Map<String, String> macroValues = new HashMap<>();
+		environmentDefines.forEach(define -> macroValues.put(define.getKey(), define.getValue()));
 		shaderProperties.getConditionallyEnabledPrograms().forEach((program, shaderOption) -> {
 			if ("true".equals(shaderOption)) return;
 
-			if ("false".equals(shaderOption) || !this.shaderPackOptions.getOptionValues().getBooleanValueOrDefault(shaderOption)) {
+			if ("false".equals(shaderOption) || !isProgramEnabled(shaderOption, macroValues)) {
 				disabledPrograms.add(program);
 			}
 		});
@@ -411,6 +413,44 @@ public class ShaderPack {
 	}
 
 	// TODO: Copy-paste from IdMap, find a way to deduplicate this
+	/**
+	 * Evaluates a program.X.enabled value. A single name keeps the old behaviour (boolean option value, unknown names
+	 * default to true). A value with operators, such as Bliss's "TRANSLUCENT_ENTITIES && IS_IRIS", is evaluated as an
+	 * expression: names resolve to boolean options first, then to defined macros (an empty or non-zero value is true);
+	 * unknown names are treated as true with a warning, as before. Oculus 1.8.0 reads such a value as one option name.
+	 */
+	private boolean isProgramEnabled(String condition, Map<String, String> macroValues) {
+		OptionValues values = this.shaderPackOptions.getOptionValues();
+		if (!net.coderbot.iris.shaderpack.parsing.BooleanExpression.isExpression(condition)) {
+			return values.getBooleanValueOrDefault(condition);
+		}
+
+		Optional<Boolean> result = net.coderbot.iris.shaderpack.parsing.BooleanExpression.evaluate(condition, name -> {
+			if (values.getOptionSet().getBooleanOptions().containsKey(name)) {
+				return values.getBooleanValueOrDefault(name);
+			}
+			if (macroValues.containsKey(name)) {
+				String macro = macroValues.get(name).trim();
+				if (macro.isEmpty()) {
+					return true;
+				}
+				try {
+					return Double.parseDouble(macro) != 0.0;
+				} catch (NumberFormatException e) {
+					return true;
+				}
+			}
+			Iris.logger.warn("Unknown option or macro " + name + " in program condition \"" + condition + "\", treating it as true");
+			return true;
+		}, macroValues::containsKey);
+
+		if (!result.isPresent()) {
+			Iris.logger.warn("Could not parse program condition \"" + condition + "\", leaving the program enabled");
+			return true;
+		}
+		return result.get();
+	}
+
 	private static Optional<String> loadProperties(Path shaderPath, String name) {
 		String fileContents = readProperties(shaderPath, name);
 		if (fileContents == null) {
