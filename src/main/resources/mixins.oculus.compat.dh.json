@@ -5,8 +5,11 @@
   "package": "net.coderbot.iris.compat.dh.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinDHCopyShader",
-    "MixinDHSkipShadowPass"
+    "MixinDHApplyShader",
+    "MixinDHFramebufferClear",
+    "MixinDHOculusAccessor",
+    "MixinDHRenderPassState",
+    "MixinDHShadowPassGuard"
   ],
   "injectors": {
     "defaultRequire": 1

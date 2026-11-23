@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import net.coderbot.iris.compat.dh.DHCompatBridge;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -13,7 +14,6 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.colorspace.ColorSpace;
 import net.coderbot.iris.colorspace.ColorSpaceConverter;
 import net.coderbot.iris.colorspace.ColorSpaceFragmentConverter;
-import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
@@ -145,6 +145,7 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final FrameUpdateNotifier updateNotifier;
 	private final CenterDepthSampler centerDepthSampler;
 	private final SodiumTerrainPipeline sodiumTerrainPipeline;
+	private final DHCompatBridge dhCompat;
 	private final ColorSpaceConverter colorSpaceConverter;
 
 	private final ImmutableSet<Integer> flippedBeforeShadow;
@@ -185,7 +186,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	private final ShaderPack pack;
 	private PackShadowDirectives shadowDirectives;
 	private ColorSpace currentColorSpace;
-	private DHCompat dhCompat;
 
 	public NewWorldRenderingPipeline(ProgramSet programSet) throws IOException {
 		ShaderPrinter.resetPrintState();
@@ -204,7 +204,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		this.shouldRenderMoon = programSet.getPackDirectives().shouldRenderMoon();
 		this.allowConcurrentCompute = programSet.getPackDirectives().getConcurrentCompute();
 		this.frustumCulling = programSet.getPackDirectives().shouldUseFrustumCulling();
-		this.dhCompat = new DHCompat();
 
 		this.resolver = new ProgramFallbackResolver(programSet);
 		this.pack = programSet.getPack();
@@ -481,12 +480,12 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 			this.shadowRenderer = null;
 		}
 
-		dhCompat.setFramebuffer(renderTargets.createGbufferFramebuffer(ImmutableSet.of(), new int[] { 0 }));
 		// TODO: Create fallback Sodium shaders if the pack doesn't provide terrain shaders
 		//       Currently we use Sodium's shaders but they don't support EXP2 fog underwater.
 		this.sodiumTerrainPipeline = new SodiumTerrainPipeline(this, programSet, createTerrainSamplers,
 			shadowRenderTargets == null ? null : createShadowTerrainSamplers, createTerrainImages, createShadowTerrainImages, renderTargets, flippedAfterPrepare, flippedAfterTranslucent,
 			shadowRenderTargets != null ? shadowRenderTargets.createShadowFramebuffer(ImmutableSet.of(), programSet.getShadow().filter(source -> !source.getDirectives().hasUnknownDrawBuffers()).map(source -> source.getDirectives().getDrawBuffers()).orElse(new int[]{0, 1})) : null, customUniforms);
+		this.dhCompat = DHCompatBridge.create(this, programSet);
 
 
 		this.setup = createSetupComputes(programSet.getSetup(), programSet, TextureStage.SETUP);
@@ -1171,8 +1170,13 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 		});
 	}
 
+	public GlFramebuffer createDHFramebuffer(ProgramSource source, boolean translucent) {
+		return renderTargets.createDHFramebuffer(translucent ? flippedAfterTranslucent : flippedAfterPrepare, source.getDirectives().getDrawBuffers());
+	}
+
 	@Override
 	public void destroy() {
+		dhCompat.destroy();
 		destroyed = true;
 
 		destroyShaders();
@@ -1251,11 +1255,6 @@ public class NewWorldRenderingPipeline implements WorldRenderingPipeline, CoreWo
 	@Override
 	public float getSunPathRotation() {
 		return sunPathRotation;
-	}
-
-	@Override
-	public DHCompat getDHCompat() {
-		return dhCompat;
 	}
 
 	protected AbstractTexture getWhitePixel() {

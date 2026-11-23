@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import net.coderbot.iris.compat.dh.DHCompat;
 import net.coderbot.iris.features.FeatureFlags;
 import net.coderbot.iris.gbuffer_overrides.matching.InputAvailability;
 import net.coderbot.iris.gbuffer_overrides.matching.SpecialCondition;
@@ -223,8 +222,4 @@ public class FixedFunctionWorldRenderingPipeline implements WorldRenderingPipeli
 		return 0;
 	}
 
-	@Override
-	public DHCompat getDHCompat() {
-		return null;
-	}
 }
