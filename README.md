@@ -2,34 +2,33 @@
   <img src="banner.png">
 </p>
 
-# Oculus
-[![](http://cf.way2muchnoise.eu/short_oculus_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/oculus)
-[![](http://cf.way2muchnoise.eu/versions/Available%20for_oculus_full.svg)](https://www.curseforge.com/minecraft/mc-mods/oculus/files)
+# Spectacles
+Spectacles is an unofficial fork of [Oculus](https://github.com/Asek3/Oculus) (the Forge port of ["Iris"](https://www.curseforge.com/minecraft/mc-mods/irisshaders))
+for Forge 1.19.2, focused on Distant Horizons. It was called Oculus until 2026-11-23; please don't report its issues to Oculus or Iris.
 
-Oculus is an Unofficial Fork of ["Iris"](https://www.curseforge.com/minecraft/mc-mods/irisshaders), made to work with Forge Mod Loader.
+Only the names people see changed (display name, jar file name, log/F3 prefix). The mod ID is still `oculus`, the Java packages
+are still `net.coderbot.iris`, and the version label still starts with `1.8.0`, so Distant Horizons, Oculus Flywheel Compat and
+other mods that look for Oculus keep working. Existing settings files (`config/oculus*.properties`) are kept.
 
 ## TL;DR:
-Distant Horizons 3.3.3 LODs render with shaders on and the pack can see LOD depth (clouds and fog draw behind LODs). The DH support
-of real Oculus 1.8.0 is fully backported.
-Tested in game with Complementary Reimagined + Euphoria Patches, Photon, Bliss and Sildur's Vibrant 1.541: LODs, MekaSuit, the Mekanism
-flamethrower and Create contraptions behaved; no underground light leak.
-**LOD shadows (`dh_shadow`) work** with packs that ship them (tested with Bliss and its DH shadowmap option), including Oculus 1.8.0's
-shadow-pass culling of LODs (roughly 10-15% more FPS when facing the sun). Packs that combine options in `program.X.enabled`
-(e.g. `A && B`) now get those programs switched correctly. **DH beacon beams and clouds** (generic rendering) are drawn through the
-shader pack too (tested with Bliss, Complementary and Photon, and with a pack's own `dh_generic` program). Shader packs without DH support hide LODs while they are active.
-See [TEST_RESULTS.md](TEST_RESULTS.md) for what was tested.
+Spectacles is Oculus 1.6.9 for Forge 1.19.2 with the Distant Horizons 3.3.3 support of Oculus 1.8.0 backported: LODs with shaders, LOD shadows,
+DH beacon beams and clouds. Tested with Complementary + Euphoria, Photon, Bliss and Sildur's Vibrant ([TEST_RESULTS.md](TEST_RESULTS.md)).
+Work in progress (dev branch only, not in this release): optional optimizations from Emberlens and a CPU/GPU timing overlay.
 
 ## Disclaimer
-Oculus is not and never will be compatible with Optifine!
+Like Oculus, Spectacles is not compatible with OptiFine.
 
 ## Dependencies
-Oculus requires [Rubidium](https://www.curseforge.com/minecraft/mc-mods/rubidium) made by Asek3, or its maintained fork
+Spectacles requires [Rubidium](https://www.curseforge.com/minecraft/mc-mods/rubidium) made by Asek3, or its maintained fork
 [Embeddium](https://www.curseforge.com/minecraft/mc-mods/embeddium). All testing of this fork used Embeddium 0.3.18.1 for 1.19.2.
 
 ## Notes
 
-This is a fork of Teqed's `1.19.2` branch (Oculus 1.6.9) to make **Distant Horizons 3.3.3** work with Oculus on Forge 1.19.2.
-The version label says "1.8.0" only so DH's version check passes (the mod itself is based on 1.6.9).
+This is a fork of Teqed's `1.19.2` branch (Oculus 1.6.9) to make **Distant Horizons 3.3.3** work with shaders on Forge 1.19.2.
+**Versions:** Spectacles is based on Oculus 1.6.9, with the Distant Horizons features of Oculus 1.8.0 ported over. The rest of
+1.8.0 (the Iris 1.7 rewrite, e.g. tessellation shaders) is not included; single features are ported when a pack needs them.
+Spectacles has its own version numbers, starting at 1.0.0 (jar `spectacles-mc1.19.2-1.0.0.jar`), because it no longer follows
+Oculus's numbering; the Oculus code underneath is 1.6.9. The version label inside the mod says "1.8.0" only so DH's version check passes.
 
 **Status:** DH LODs render with shaders on. This branch adds `dh_terrain` and `dh_water` programs, the `dhDepthTex`/`dhDepthTex1`
 samplers, the `dh*` uniforms and the `DISTANT_HORIZONS`/`DH_BLOCK_*` macros (ported from PolarBearEs's fork), so packs like
@@ -62,6 +61,14 @@ ships one yet); like 1.8.0, it uses the pack's `blend.dh_generic` setting. Packs
 near the player (Bliss's DH overdraw prevention) cut the same zone out of the beam; Minecraft's own beam covers it once the chunk is loaded.
 
 The DH features of real Oculus 1.8.0 are now all backported. In-game test results are in [TEST_RESULTS.md](TEST_RESULTS.md).
+
+**Work in progress, dev branch only (not in this release): Experimental page.** The shader pack screen has an "Experimental..." button. It opens
+global options (saved in `config/oculus-experimental.properties`, not per pack) for small CPU optimizations ported from the
+[Emberlens](https://github.com/shuttheirprayer/Emberlens) fork. Everything is off by default, and with everything off Oculus
+runs the same code as before. Each option's tooltip gives what it does, the expected benefit, a risk level and when it applies.
+"Enable safe optimizations" turns on the low-risk ones; "Reset to defaults" turns everything off again. The same page has a
+**timing overlay** and **timing log**: CPU and GPU milliseconds per render pass (shadow, DH LODs, gbuffers, deferred,
+composite, final), for comparing options. No Emberbium needed. See [BACKPORT_CANDIDATES.md](BACKPORT_CANDIDATES.md).
 
 ### Known quirks (not Oculus bugs)
 These come from other mods or shader packs; they are listed so they are not reported as Oculus bugs.
@@ -125,13 +132,26 @@ These come from other mods or shader packs; they are listed so they are not repo
   switches with combined options (Bliss's `TRANSLUCENT_ENTITIES && IS_IRIS`) follow those options.
 - DH's SSAO and fog overrides under shader packs now pass Oculus as the caller, so DH no longer logs a deprecated-API warning.
 - Mekanism fixes ported from Asek3's 1.19.2 branch and Mekalus: MekaSuit and flamethrower shaders, with a corrected flame vertex format.
+- Renamed to Spectacles (display name, jar name, log/F3 prefix); mod ID, packages and the 1.8.0 version label are unchanged.
+- Work in progress on the dev branch only: the Experimental page (toggleable Emberlens optimizations, CPU/GPU pass timing) and the
+  `RenderTargets` depth fix from Emberlens.
 - Memory leak fix for Flywheel's `WorldAttached` (Create's renderer; from Mekalus). Unrelated to the Oculus Flywheel Compat mod.
 
 ### Building
 Needs JDK 17 (JDK 21+ fails to compile). Put `libs/DistantHorizons-3.3.3-1.19.2-fabric-forge.jar` in `libs/` (compile-only), then `./gradlew build`.
 
 ## Credits
-Based on Teqed's Oculus 1.19.2 branch, Asek3's Oculus (its 1.20.1 Oculus 1.8.0 source is the reference for the DH backport), Askadar's DH spoof, and KostromDan's Mekalus fork. DH shader integration from PolarBearEs's Oculus fork and fangyu-mc's oculus-dh3-compat. Original Iris by coderbot, IMS212 and contributors.
+- **Teqed**: the [Oculus `1.19.2` branch](https://github.com/Teqed/Oculus/tree/1.19.2) this fork is based on.
+- **Asek3**: [Oculus](https://github.com/Asek3/Oculus); its 1.20.1 Oculus 1.8.0 source is the reference for the DH backport, and its 1.19.2 branch the source of the Mekanism fixes.
+- **Askadar**: the original DH version spoof.
+- **KostromDan**: the [Mekalus](https://github.com/KostromDan/Mekalus) fork (Mekanism and Flywheel fixes).
+- **PolarBearEs** and **fangyu-mc**: DH shader integration ([PolarBearEs's Oculus fork](https://github.com/PolarBearEs/Oculus/tree/1.19.2),
+  built on fangyu-mc's oculus-dh3-compat, whose repository is no longer online).
+- **shuttheirprayer** (work in progress, dev branch only): [Emberlens](https://github.com/shuttheirprayer/Emberlens) (1.20.1 Oculus fork, LGPL-3.0-only), source of the
+  experimental optimizations, the `RenderTargets` depth fix and the idea for the pass timing tool. Ported code is marked
+  "(Emberlens)" in comments; [BACKPORT_CANDIDATES.md](BACKPORT_CANDIDATES.md) lists each change with its Emberlens commit.
+  Nothing from Emberlens's companion Embeddium fork (Emberbium) is used or required.
+- **coderbot, IMS212 and contributors**: the original Iris.
 
 ## Contributors
 <a href="https://github.com/Asek3/Oculus/graphs/contributors">
@@ -141,5 +161,8 @@ Based on Teqed's Oculus 1.19.2 branch, Asek3's Oculus (its 1.20.1 Oculus 1.8.0 s
 ## License
 
 [LGPL-3.0 license](https://github.com/Asek3/Oculus/blob/1.16.5/LICENSE)
+
+This fork, including the code ported from Emberlens (LGPL-3.0-only) and the other forks credited above, is distributed under the
+same LGPL-3.0 license. This repository is the source for any jar built from it.
 
 
