@@ -18,7 +18,9 @@ get LOD depth, DH programs, uniforms and shadows, like the real Oculus 1.8.0 on 
   `NewWorldRenderingPipeline` creates that framebuffer as a gbuffer FBO on colortex0 only. LODs are therefore composited into
   colortex0 with no depth, no DH programs, no DH uniforms/macros. That is the whole gap.
 
-## Branch and status (`dh-shadow`, on top of `dh-fallback-copy` and `stacia-dh-merge`)
+## Branch and status
+Branches: `dh-3.3.3-mekanism` = stable/default (moved forward only after the user tests); `dh-3.3.3-mekanism-dev` = work branch
+(was `dh-shadow`); `stacia-dh-merge` kept for history. `dh-fallback-copy` is obsolete (fallback removed).
 Builds with JDK 17 and was tested in game (Complementary Reimagined + Euphoria Patches, DH 3.3.3). Create with shaders works (user-confirmed).
 Oculus Flywheel Compat (`oculus-flywheel-compat-forge1.19.2+1.0.3b`) tested 2026-11-23 with this tree: loads, shadows work, Photon FPS 67-81 -> 90-110 at the same spot (uncapped).
 Working: LODs with shaders on/off, pack sees LOD depth (clouds/fog behind LODs), smaller chunk/LOD seam, no underground light leak,
@@ -37,7 +39,7 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    `renderLods`/`renderDeferredLodsForShaders` when a pack is in use and `DHCompat.isActive()` is false), like real 1.8.0
    which marks such packs incompatible. An earlier colortex0 fallback (Teqed's old behaviour) was removed: it drew LODs into
    a buffer the pack uses for something else (Bliss showed a warped sky). Shaders off or a DH-aware pack brings LODs back.
-7. `dh_shadow` (branch `dh-shadow`): `ProgramSet.getDhShadow()`, shadow `ProgramState` in `IrisLodRenderProgram` (shadow samplers/images,
+7. `dh_shadow`: `ProgramSet.getDhShadow()`, shadow `ProgramState` in `IrisLodRenderProgram` (shadow samplers/images,
    sun matrices from `ShadowRenderer.PROJECTION`/`MODELVIEW`), shadow-map FBO via `NewWorldRenderingPipeline.createDHShadowFramebuffer`,
    `DhFrameBufferWrapper` returns it in the shadow pass, `MixinDHShadowPassGuard` only cancels when there is no shadow program,
    `MixinDHFramebufferClear` never clears the shadow map. Honours `dhShadow.enabled`; log says "LOD shadows enabled/off".
