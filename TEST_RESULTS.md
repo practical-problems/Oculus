@@ -9,6 +9,7 @@ In-game tests of this fork (Oculus 1.6.9 base + Distant Horizons 3.3.3 backport)
 | Date | 2026-11-23 |
 | Build | `1.8.0 # spoof for DH 3.3 20261123-1401` (branch `dh-3.3.3-mekanism`) |
 | Minecraft / Forge | 1.19.2, Forge 43, Embeddium 0.3.18.1 |
+| Minecraft render distance | 4 chunks (everything beyond is drawn by DH as LODs) |
 | Distant Horizons | 3.3.3, LOD render distance 128 chunks |
 | Shader pack | Bliss v2.1.2 with its DH shadowmap option on, shadow map resolution 4096 (unless noted) |
 | Java | Temurin 24.0.2, ZGC, 12 GB heap |
@@ -65,3 +66,5 @@ At the mountain view, 64 and 128 chunks gave identical images.
 | Oculus Flywheel Compat, turning shaders on inside a world | Crash in that mod's vertex reader (its bug). Workaround: choose shaders before joining a world |
 | Pack without `dh_terrain` (Sildur's Vibrant 1.41) | Pass: LODs hidden while active; back after switching to Photon, no restart |
 | Sildur's Vibrant 1.541, Complementary r5.10 + Euphoria 1.11.2, Photon v1.3b | Pass: render correctly with LODs |
+| `program.X.enabled` expressions (Bliss `TRANSLUCENT_ENTITIES && IS_IRIS`) | Pass: Bliss loads, its six "defaulting to true" warnings are gone, no new warnings |
+| DH config overrides with caller name | Pass: DH's deprecated-API warning is gone |

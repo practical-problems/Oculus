@@ -119,7 +119,7 @@ Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are do
 2. **Generic rendering (DH clouds/beacons):** `IrisGenericRenderProgram`, `DhApiBeforeGenericObjectRenderEvent`,
    `DhApiBeforeGenericRenderSetupEvent`, `DHGenericTransformer`. Until then, turn DH's own cloud rendering off in DH config.
 3. (Done as commit 11: the four 1.8.0 frustum mixins are replaced by one `DhShadowCullingFrustum` wrapper.)
-4. Small fixes (dev branch, untested in game): `program.X.enabled` values with `&&`/`||`/`!`/parentheses are now evaluated by
+4. Small fixes (tested 2026-11-23: Bliss loads, both warnings gone, no new ones): `program.X.enabled` values with `&&`/`||`/`!`/parentheses are now evaluated by
    `shaderpack/parsing/BooleanExpression` (names: boolean option, then defined macro, else true with a warning; unparsable -> enabled
    with a warning; single names keep the old path). Oculus 1.8.0 reads them as one option name. Bliss's `TRANSLUCENT_ENTITIES && IS_IRIS`
    now disables its translucent entity/block programs while that option is off (its default). Evaluator verified with hand-written cases
@@ -150,6 +150,7 @@ jar). Not in Oculus code; suspects: Java 24 on Forge 43, Redirector/ModernFix in
 - LODs visible with shaders on and off; no underground light leak; MekaSuit renders; Mekanism flamethrower does not crash.
 - Known gaps: LOD shadows only with packs that ship `dh_shadow` (Bliss with its DH shadowmap option); DH clouds/beacons unsupported
   (disable DH cloud rendering).
+- All 2026-11-23 tests used Minecraft render distance 4 chunks.
 - LOD shadow test: render distance 4, a tall LOD object between you and a low sun, on/off shots from the same view after chunks settle.
 - Keep exactly one Oculus jar enabled. DH config resets are fine. Generation of the DH database takes hours and lowers FPS meanwhile.
 
