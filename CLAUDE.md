@@ -133,6 +133,10 @@ Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are do
    exception). DHCompat binds it as an override (DH's own GlGenericObjectShaderProgram.overrideThisFrame() is always true, so binding
    is the switch), binds the LOD terrain framebuffer (or a dh_generic framebuffer with DH depth) in DhApiBeforeGenericRenderSetupEvent,
    and cancels every generic object during the LOD shadow pass (DH runs its generic renderer there too; 1.8.0 does not guard this).
+   The pack-owned `dh_generic` path (own framebuffer + DH depth) is untested in game: no tested pack ships dh_generic. Fixed before
+   testing: it attached DH depth with addDepthAttachment (RenderTargets would swap it for MC depth on resize) and only re-attached on
+   a new texture id; now addExternalDepthAttachment + a DH depth generation counter, like the terrain wrapper. Test: copy a pack's
+   world0/dh_terrain.* to dh_generic.*; log must say "use dh_generic".
    If the program fails to build, DH keeps its own shader. Verified offline: the vendored glsl-transformer patches a legacy test
    shader and Bliss/Photon dh_terrain without errors (harness: /tmp/tx with stubs for log4j/fastutil/LWJGL constants/annotations).
 3. (Done as commit 11: the four 1.8.0 frustum mixins are replaced by one `DhShadowCullingFrustum` wrapper.)

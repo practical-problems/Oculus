@@ -44,6 +44,8 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 	private static float nearPlane, farPlane;
 	private static final ProjectionHistory projectionHistory = new ProjectionHistory();
 	private static int depthTexture;
+	/** Bumped each time DH (re)creates its depth texture; OpenGL may reuse the same id, so the id alone cannot tell. */
+	private static int depthTextureGeneration;
 	private static boolean transparentPass;
 	private static boolean cloudEventBound;
 	private static boolean configOverridesApplied;
@@ -59,7 +61,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 	private IrisGenericRenderProgram genericProgram;
 	/** Only for a pack with its own dh_generic program; otherwise generic objects use the LOD terrain framebuffer. */
 	private GlFramebuffer genericFramebuffer;
-	private int genericFramebufferDepth;
+	private int genericFramebufferDepthGeneration = -1;
 	private final boolean disableDhClouds;
 	private DepthTexture depthTextureNoTranslucents;
 	private int depthTextureWidth = -1;
@@ -142,9 +144,10 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 			framebufferWrapper.bind();
 			return;
 		}
-		if (genericFramebufferDepth != depthTexture && depthTexture != 0) {
-			genericFramebuffer.addDepthAttachment(depthTexture);
-			genericFramebufferDepth = depthTexture;
+		if (depthTexture != 0 && genericFramebufferDepthGeneration != depthTextureGeneration) {
+			// External attachment, like the LOD terrain framebuffer: RenderTargets must not swap it for Minecraft's depth on resize.
+			genericFramebuffer.addExternalDepthAttachment(depthTexture);
+			genericFramebufferDepthGeneration = depthTextureGeneration;
 		}
 		genericFramebuffer.bind();
 	}
@@ -228,6 +231,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 			active.opaqueDepthCopyPending = true;
 		}
 		depthTexture = texture;
+		depthTextureGeneration++;
 	}
 
 	public static void setRenderPass(EDhApiRenderPass renderPass) {
@@ -261,6 +265,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 		DhApiResult<Integer> result = DhApi.Delayed.renderProxy.getDhDepthTextureId();
 		if (result.success && result.payload != null && result.payload > 0) {
 			depthTexture = result.payload;
+			depthTextureGeneration++;
 			active.framebufferWrapper.attachDepthTexture(depthTexture);
 		}
 	}
