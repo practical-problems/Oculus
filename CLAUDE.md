@@ -68,6 +68,8 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    91/175, 143-148; 8 chunks 91/175, 148-149. The shadow count does not depend on shadow distance: neither 1.8.0 nor we cull LODs
    outside the shadow map's area. Possible extra optimization (not in 1.8.0): also cull sections outside the shadow ortho box; it only
    helps DH shadowmap with a shadow distance well below the DH distance, a rare combination, so left for later.
+   With a small Bliss shadow distance (8 chunks) light shafts appear to stream out of distant LODs (outside the shadow map counts as
+   lit); back at 128 chunks they are blocked again. Expected, not a bug.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
