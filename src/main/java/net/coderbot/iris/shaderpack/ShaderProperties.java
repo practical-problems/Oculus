@@ -114,7 +114,16 @@ public class ShaderProperties {
 	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
 	public ShaderProperties(String contents, ShaderPackOptions shaderPackOptions, Iterable<StringPair> environmentDefines, Iterable<StringPair> replacements) {
 		for (StringPair pair : replacements) {
-			contents = contents.replace(pair.getKey(), pair.getValue());
+			// Flag macros (IS_IRIS, DISTANT_HORIZONS, ...) have an empty value. A plain text replace erased
+			// them, turning `#if defined DISTANT_HORIZONS && defined IS_IRIS` into `#if defined  && defined `
+			// and silently dropping every block guarded by them (Bliss lost dh_terrain this way). They are
+			// already passed to the preprocessor as environment defines, so leave them in the text.
+			if (pair.getValue().isEmpty()) {
+				continue;
+			}
+			// Whole words only, so a macro name never rewrites part of a longer identifier.
+			contents = contents.replaceAll("\\b" + java.util.regex.Pattern.quote(pair.getKey()) + "\\b",
+				java.util.regex.Matcher.quoteReplacement(pair.getValue()));
 		}
 
 		String preprocessedContents = PropertiesPreprocessor.preprocessSource(contents, shaderPackOptions, environmentDefines);
