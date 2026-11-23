@@ -136,12 +136,16 @@ These come from other mods or shader packs; they are listed so they are not repo
 Needs JDK 17 (JDK 21+ fails to compile). Put `libs/DistantHorizons-3.3.3-1.19.2-fabric-forge.jar` in `libs/` (compile-only), then `./gradlew build`.
 
 ## Credits
-Based on Teqed's Oculus 1.19.2 branch, Asek3's Oculus (its 1.20.1 Oculus 1.8.0 source is the reference for the DH backport), Askadar's DH spoof, and KostromDan's Mekalus fork. DH shader integration from PolarBearEs's Oculus fork and fangyu-mc's oculus-dh3-compat. Original Iris by coderbot, IMS212 and contributors.
-
-The experimental optimizations, the `RenderTargets` depth fix and the idea for the pass timing tool come from
-[Emberlens](https://github.com/shuttheirprayer/Emberlens) by shuttheirprayer, a 1.20.1 Oculus fork licensed LGPL-3.0-only.
-Ported code is marked "(Emberlens)" in comments; [BACKPORT_CANDIDATES.md](BACKPORT_CANDIDATES.md) lists each change with the
-Emberlens commit it came from. Nothing from Emberlens's companion Embeddium fork (Emberbium) is used or required.
+- **Teqed**: the Oculus `1.19.2` branch this fork is based on.
+- **Asek3**: Oculus; its 1.20.1 Oculus 1.8.0 source is the reference for the DH backport, and its 1.19.2 branch the source of the Mekanism fixes.
+- **Askadar**: the original DH version spoof.
+- **KostromDan**: the Mekalus fork (Mekanism and Flywheel fixes).
+- **PolarBearEs** and **fangyu-mc**: DH shader integration (PolarBearEs's Oculus fork, built on fangyu-mc's oculus-dh3-compat).
+- **shuttheirprayer**: [Emberlens](https://github.com/shuttheirprayer/Emberlens) (1.20.1 Oculus fork, LGPL-3.0-only), source of the
+  experimental optimizations, the `RenderTargets` depth fix and the idea for the pass timing tool. Ported code is marked
+  "(Emberlens)" in comments; [BACKPORT_CANDIDATES.md](BACKPORT_CANDIDATES.md) lists each change with its Emberlens commit.
+  Nothing from Emberlens's companion Embeddium fork (Emberbium) is used or required.
+- **coderbot, IMS212 and contributors**: the original Iris.
 
 ## Contributors
 <a href="https://github.com/Asek3/Oculus/graphs/contributors">
