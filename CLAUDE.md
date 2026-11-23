@@ -32,6 +32,9 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    programs, `dhDepthTex`/`dhDepthTex1`, `dh*` uniforms (incl. projection matrices), `DISTANT_HORIZONS`/`DH_BLOCK_*` macros, DH terrain
    transformer, five DH mixins. Replaced our `DHCompat`, plugin, `MixinDHCopyShader` and `MixinDHSkipShadowPass`; removed `getDHCompat()`.
    Not taken from their commit: Loom 1.4, wrapper bump, Modrinth DH dependency, workflows.
+6. Fallback (`MixinDHCopyShader` + `NewWorldRenderingPipeline.getDhFallbackFramebufferId()`): when the pack has no `dh_terrain` the integration
+   is off, so redirect DH's `GlDhCopyShader_forge.renderToFrameBuffer` target into a colortex0 gbuffer FBO (Teqed's original behaviour).
+   Only active when `DHCompat.isActive()` is false. Not yet tested with a pack lacking DH programs.
 
 ## Past issues and fixes (for context)
 - **DH 2.3.x crash:** the old `MixinDHApplyShader` redirected `getTargetFrameBuffer()` inside `onRender`; DH 2.3.3 moved it to
