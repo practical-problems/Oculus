@@ -77,6 +77,8 @@ three packs ships `dh_generic`, so all use their `dh_terrain` program (logged on
 | DH clouds (DH cloud rendering on), Complementary with its cloud style set to vanilla | Pass: DH clouds drawn through the pack at cloud height over the LODs, lit by the pack (white by day, dark blue at night), fogged near the horizon; slightly see-through (DH draws them blended), so stars show through at night |
 | DH clouds with Complementary's own clouds, Bliss, Photon | Pass: hidden, because the pack turns vanilla clouds off |
 | Distant DH clouds through a spyglass (Complementary) | Pass: confirmed as DH's clouds (vanilla clouds off; they vanish when DH cloud rendering is off). Far clouds cover parts of tall LOD mountains behind them, which is expected: the clouds are closer than peaks that rise above cloud height |
+| Pack-owned `dh_generic` (Bliss copy with `world0/dh_terrain.*` copied to `dh_generic.*`, build `7f822b0`) | Pass: log says "use dh_generic"; beam clean white on the pyramid, hidden behind the hill and trees, glows at night. Without a `blend.dh_generic` line the beam was blended into Bliss's packed buffers (pink/yellow over trees); adding `blend.dh_generic = off` (Bliss uses that for `dh_terrain`) fixed it. Same as 1.8.0: the pack's blend setting is applied, otherwise DH's blending stays on |
+| `dh_generic` after window resize (windowed and fullscreen) | Pass: beam still hidden behind the trees, so DH's depth stays attached (fixed in `7f822b0`) |
 | Log check | Pass: "generic objects ... use dh_terrain" for Bliss (3 loads), Complementary and Photon; no build warnings or shader errors |
 
 ## Other results from the same day
