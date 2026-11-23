@@ -21,7 +21,8 @@ without DH support hide LODs while they are active. See [TEST_RESULTS.md](TEST_R
 Oculus is not and never will be compatible with Optifine!
 
 ## Dependencies
-Oculus requires [Rubidium](https://www.curseforge.com/minecraft/mc-mods/rubidium) made by Asek3!
+Oculus requires [Rubidium](https://www.curseforge.com/minecraft/mc-mods/rubidium) made by Asek3, or its maintained fork
+[Embeddium](https://www.curseforge.com/minecraft/mc-mods/embeddium). All testing of this fork used Embeddium 0.3.18.1 for 1.19.2.
 
 ## Notes
 
