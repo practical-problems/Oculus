@@ -8,6 +8,10 @@
 
 Oculus is an Unofficial Fork of ["Iris"](https://www.curseforge.com/minecraft/mc-mods/irisshaders), made to work with Forge Mod Loader.
 
+## TL;DR:
+It runs. Distant Horizons 3.3.3 LODs render with shaders on, but it is **not feature complete**:
+DH-aware shader features (`dh_terrain`, `dh_shadow`, LOD depth, DH uniforms) are still missing, so some packs look off at the LOD boundary and LODs don't cast shadows.
+
 ## Disclaimer
 Oculus is not and never will be compatible with Optifine!
 
