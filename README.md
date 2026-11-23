@@ -9,15 +9,9 @@
 Oculus is an Unofficial Fork of ["Iris"](https://www.curseforge.com/minecraft/mc-mods/irisshaders), made to work with Forge Mod Loader.
 
 ## TL;DR:
-Distant Horizons 3.3.3 LODs render with shaders on and the pack can see LOD depth (clouds and fog draw behind LODs). The DH support
-of real Oculus 1.8.0 is fully backported.
-Tested in game with Complementary Reimagined + Euphoria Patches, Photon, Bliss and Sildur's Vibrant 1.541: LODs, MekaSuit, the Mekanism
-flamethrower and Create contraptions behaved; no underground light leak.
-**LOD shadows (`dh_shadow`) work** with packs that ship them (tested with Bliss and its DH shadowmap option), including Oculus 1.8.0's
-shadow-pass culling of LODs (roughly 10-15% more FPS when facing the sun). Packs that combine options in `program.X.enabled`
-(e.g. `A && B`) now get those programs switched correctly. **DH beacon beams and clouds** (generic rendering) are drawn through the
-shader pack too (tested with Bliss, Complementary and Photon, and with a pack's own `dh_generic` program). Shader packs without DH support hide LODs while they are active.
-See [TEST_RESULTS.md](TEST_RESULTS.md) for what was tested.
+Oculus 1.6.9 for Forge 1.19.2 with the Distant Horizons 3.3.3 support of Oculus 1.8.0 backported: LODs with shaders, LOD shadows,
+DH beacon beams and clouds. Tested with Complementary + Euphoria, Photon, Bliss and Sildur's Vibrant ([TEST_RESULTS.md](TEST_RESULTS.md)).
+Dev branch only: optional optimizations from Emberlens and a CPU/GPU timing overlay on a new Experimental page (all off by default, not yet tested).
 
 ## Disclaimer
 Oculus is not and never will be compatible with Optifine!
@@ -144,6 +138,11 @@ Needs JDK 17 (JDK 21+ fails to compile). Put `libs/DistantHorizons-3.3.3-1.19.2-
 ## Credits
 Based on Teqed's Oculus 1.19.2 branch, Asek3's Oculus (its 1.20.1 Oculus 1.8.0 source is the reference for the DH backport), Askadar's DH spoof, and KostromDan's Mekalus fork. DH shader integration from PolarBearEs's Oculus fork and fangyu-mc's oculus-dh3-compat. Original Iris by coderbot, IMS212 and contributors.
 
+The experimental optimizations, the `RenderTargets` depth fix and the idea for the pass timing tool come from
+[Emberlens](https://github.com/shuttheirprayer/Emberlens) by shuttheirprayer, a 1.20.1 Oculus fork licensed LGPL-3.0-only.
+Ported code is marked "(Emberlens)" in comments; [BACKPORT_CANDIDATES.md](BACKPORT_CANDIDATES.md) lists each change with the
+Emberlens commit it came from. Nothing from Emberlens's companion Embeddium fork (Emberbium) is used or required.
+
 ## Contributors
 <a href="https://github.com/Asek3/Oculus/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Asek3/Oculus" />
@@ -152,5 +151,8 @@ Based on Teqed's Oculus 1.19.2 branch, Asek3's Oculus (its 1.20.1 Oculus 1.8.0 s
 ## License
 
 [LGPL-3.0 license](https://github.com/Asek3/Oculus/blob/1.16.5/LICENSE)
+
+This fork, including the code ported from Emberlens (LGPL-3.0-only) and the other forks credited above, is distributed under the
+same LGPL-3.0 license. This repository is the source for any jar built from it.
 
 
