@@ -38,8 +38,7 @@ into the shadow map using the sun's matrices. Only Bliss does this among the pac
 Complementary, Euphoria and Photon turn LOD shadows off themselves. LODs that cannot cast a shadow into view are skipped in the
 shadow pass (about half of them when facing the sun or looking sideways, roughly 10-15% more FPS in Bliss; DH's "Disable Shadow Pass
 Frustum Culling" option turns this off). With `shadowNearPlane`/`shadowFarPlane = -1` the shadow depth range covers the full DH render distance
-(same as real Oculus 1.8.0); far LOD shadows in Bliss still look faint, most likely due to Bliss's experimental DH shadowmap mode.
-Tested with Bliss at shadow map resolution 4096, DH 128 chunks and Minecraft render distance 4: no shadows lost with culling on,
+(same as real Oculus 1.8.0). Tested with Bliss at shadow map resolution 4096, DH 128 chunks and Minecraft render distance 4: no shadows lost with culling on,
 nearby and player shadows unchanged, and pack switches and DH render distance changes work in-world.
 
 **Shader pack options in program switches:** `program.X.enabled` values that combine options with `&&`, `||`, `!` or parentheses
@@ -51,17 +50,32 @@ Real Oculus 1.8.0 does not do this.
 DH-aware pack or turning shaders off brings them back without a restart.
 
 **Oculus Flywheel Compat** (`oculus-flywheel-compat-forge1.19.2+1.0.3b`) works with this build and raised FPS with Photon by about a
-third around Create contraptions. Choose your shader setting before joining a world: turning shaders on while in a world crashes the
-game (a native access violation). The mod switches its unsafe vertex reader and writer to a 52-byte vertex format as soon as shaders
-are on, but Create models already built with shaders off are still in the 32-byte format, so the reader runs past the end of that
-data. It is that mod's bug, not Oculus's.
-
-**Known DH quirks (not Oculus bugs):** modded blocks that give off even a little light (e.g. Serene Shrubbery plants) can glow as LODs
-with shaders, because DH classifies them as illuminated; add them to DH's ignored-blocks list. DH's own clouds clash with pack clouds;
-turn DH cloud rendering off.
+third around Create contraptions. Choose your shader setting before joining a world (see Known quirks below).
 
 Not implemented yet: generic rendering (DH clouds/beacons; turn DH's own cloud rendering off).
 Backporting the rest of the real Oculus 1.8.0 DH support is ongoing. In-game test results are in [TEST_RESULTS.md](TEST_RESULTS.md).
+
+### Known quirks (not Oculus bugs)
+These come from other mods or shader packs; they are listed so they are not reported as Oculus bugs.
+
+- **Oculus Flywheel Compat: turning shaders on inside a world crashes the game** (a native access violation). The mod switches its
+  unsafe vertex reader and writer to a 52-byte vertex format as soon as shaders are on, but Create models already built with shaders
+  off are still in the 32-byte format, so the reader runs past the end of that data. Workaround: choose your shader setting before
+  joining a world, or switch at the title screen.
+- **DH: faintly glowing modded blocks glow as LODs with shaders** (e.g. Serene Shrubbery plants). DH classifies any block that gives
+  off even a little light as illuminated. Workaround: add those blocks to DH's ignored-blocks list.
+- **DH: its own clouds clash with shader pack clouds.** Turn off DH's cloud rendering in DH's settings. (Drawing DH clouds through the
+  shader pack is not implemented yet.)
+- **DH: LOD data from DH 2.x shows as magenta/black checkers** until DH regenerates it.
+- **DH: an occasional crash on Save and Quit** (`NoClassDefFoundError: DhApiWorldUnloadEvent` in DH's own code). Seen once, not
+  reproduced. If it repeats, try Java 17 or 21.
+- **DH: `Unable to convert config value ... for config [mapTest]`** is logged each time DH saves its settings. Harmless.
+- **Bliss: far LOD shadows look faint** with its DH shadowmap option, most likely because that mode is experimental (one shadow map
+  stretched over the whole LOD range).
+- **Bliss: with a small shadow distance, light shafts seem to stream out of distant LODs.** Areas outside the shadow map count as
+  lit. Set Bliss's shadow distance to about your DH render distance.
+- **Bliss: the "IRIS REQUIRED" label** next to its DH options is fixed text in Bliss's menu, not a detection failure.
+- **Photon: `#endif without #if`** is logged on every load. It comes from Photon's own files and does not affect rendering.
 
 ### Changes
 - DH shader integration from PolarBearEs's `Oculus` fork (itself based on fangyu-mc's `oculus-dh3-compat`): DH programs, depth
