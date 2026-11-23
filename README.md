@@ -83,6 +83,8 @@ These come from other mods or shader packs; they are listed so they are not repo
 - **Bliss: with a small shadow distance, light shafts seem to stream out of distant LODs.** Areas outside the shadow map count as
   lit. Set Bliss's shadow distance to about your DH render distance.
 - **Bliss: the "IRIS REQUIRED" label** next to its DH options is fixed text in Bliss's menu, not a detection failure.
+- **Photon: the upper part of a DH beacon beam turns dark with cloud shadows on.** Photon's clouds darken the beam from about the
+  cloud layer upward; raising Photon's cloud altitude moves that point up with them. Its own behaviour with DH objects.
 - **Photon: `#endif without #if`** is logged on every load. It comes from Photon's own files and does not affect rendering.
 
 ### Changes

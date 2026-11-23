@@ -71,6 +71,7 @@ three packs ships `dh_generic`, so all use their `dh_terrain` program (logged on
 | Bliss DH shadowmap on, low sun (time 1000) | Pass: no shadow from the beam on LOD terrain |
 | Complementary r5.10 + Euphoria 1.11.2 (~80 blocks) | Pass: beam drawn, shaded by the pack |
 | Photon v1.3b (~80 blocks) | Pass: beam drawn with Photon's bloom glow |
+| Photon at night, cloud shadows on vs off, then cloud altitude raised (~800 blocks) | Photon behaviour: with cloud shadows on the beam turns dark from about the cloud layer up; the dark part moves up with the clouds, and with them far up the beam stays bright to the cloud layer |
 | Close to the beacon (within ~32 blocks) | Expected gap: Bliss's DH overdraw prevention discards LOD pixels within `far - 32` blocks (32 at render distance 4), and DH's own shader does the same without shaders. Minecraft's own beam covers that zone once the chunk is loaded |
 | Freshly placed beacon/pyramid | Not shown in the LOD until DH updates the chunk (save or unload); DH behaviour, also with shaders off |
 | Log check | Pass: "generic objects ... use dh_terrain" for Bliss (3 loads), Complementary and Photon; no build warnings or shader errors |
