@@ -58,7 +58,7 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    otherwise its far plane (vanilla view distance) would cull far LODs. DH's F3 line "Shadow VBO Render Count: [visible/total]" shows it;
    DH config `disableShadowPassFrustumCulling` turns it off for A/B tests.
    Results (DH still generating chunks in the background): facing the sun 82/181 shadow sections, 140-149 FPS vs 181/181, 118-133 off;
-   facing the sun at time 11000, 91/175, 150-152 FPS vs 175/175, 137 off. Facing away from a low sun nothing is culled (184/184 both
+   facing the sun at time 11000, 91/175, 150-152 FPS vs 175/175, 132-137 off. Facing away from a low sun nothing is culled (184/184 both
    ways, same FPS), which is correct: every LOD can shadow something in view. On/off screenshots show no missing shadows.
    Note: DH shows the "/total" on both F3 lines only while its normal `disableFrustumCulling` is off.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
