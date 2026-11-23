@@ -63,6 +63,9 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    facing the sun at time 11000, 91/175, 150-152 FPS vs 175/175, 132-137 off. Facing away from a low sun nothing is culled (184/184 both
    ways, same FPS), which is correct: every LOD can shadow something in view. On/off screenshots show no missing shadows.
    Note: DH shows the "/total" on both F3 lines only while its normal `disableFrustumCulling` is off.
+   All Bliss DH-shadowmap tests used shadow map resolution 4096 and DH render distance 128 chunks.
+   Bliss shadowDistance test (hill, facing the sun, culling on): 128 chunks 91/175, 135-153 FPS; 64 chunks 91/175, 139-150; 32 chunks
+   91/175, 143-148. The shadow count does not depend on shadow distance: neither 1.8.0 nor we cull LODs outside the shadow map's area.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
