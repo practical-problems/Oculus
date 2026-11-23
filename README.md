@@ -63,6 +63,14 @@ near the player (Bliss's DH overdraw prevention) cut the same zone out of the be
 
 The DH features of real Oculus 1.8.0 are now all backported. In-game test results are in [TEST_RESULTS.md](TEST_RESULTS.md).
 
+**Experimental page (dev branch, not yet tested in game):** the shader pack screen has an "Experimental..." button. It opens
+global options (saved in `config/oculus-experimental.properties`, not per pack) for small CPU optimizations ported from the
+[Emberlens](https://github.com/shuttheirprayer/Emberlens) fork. Everything is off by default, and with everything off Oculus
+runs the same code as before. Each option's tooltip gives what it does, the expected benefit, a risk level and when it applies.
+"Enable safe optimizations" turns on the low-risk ones; "Reset to defaults" turns everything off again. The same page has a
+**timing overlay** and **timing log**: CPU and GPU milliseconds per render pass (shadow, DH LODs, gbuffers, deferred,
+composite, final), for comparing options. No Emberbium needed. See [BACKPORT_CANDIDATES.md](BACKPORT_CANDIDATES.md).
+
 ### Known quirks (not Oculus bugs)
 These come from other mods or shader packs; they are listed so they are not reported as Oculus bugs.
 
@@ -125,6 +133,9 @@ These come from other mods or shader packs; they are listed so they are not repo
   switches with combined options (Bliss's `TRANSLUCENT_ENTITIES && IS_IRIS`) follow those options.
 - DH's SSAO and fog overrides under shader packs now pass Oculus as the caller, so DH no longer logs a deprecated-API warning.
 - Mekanism fixes ported from Asek3's 1.19.2 branch and Mekalus: MekaSuit and flamethrower shaders, with a corrected flame vertex format.
+- Experimental page with toggleable Emberlens optimizations (all off by default) and CPU/GPU pass timing. The shader pack screen's
+  top row is now three buttons: Open Pack Folder, Shader Pack Settings, Experimental.
+- `RenderTargets` re-attaches depth when Minecraft's depth texture id changes, not only its version (fix from Emberlens).
 - Memory leak fix for Flywheel's `WorldAttached` (Create's renderer; from Mekalus). Unrelated to the Oculus Flywheel Compat mod.
 
 ### Building

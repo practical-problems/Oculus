@@ -159,7 +159,24 @@ Do not port the whole Iris 1.7 refactor (package `net.irisshaders`). Port only D
 See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 3.3.3, so its DH-facing code is API-compatible.
 
 Non-DH ports from other forks (Emberlens so far) are tracked in `BACKPORT_CANDIDATES.md`, only ones that work with stock
-Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported or tested. DH backport comes first.
+Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported or tested.
+
+## Experimental page (Emberlens ports; batch 1 committed 2026-11-23 as `d392ef5`, untested in game)
+User rules: every experimental optimization defaults to off; all off = the completed DH baseline (each port is an `if` on a
+static flag around the new path, the old code is untouched); correctness fixes are separate commits and always on (item 15,
+`11e0bc1`); no Emberbium dependency; keep Oculus Flywheel Compat working (matters for the vertex-writing batch, which touches
+the vertex code that mod also hooks); CPU and GPU timing measured separately, in ms.
+- `config/ExperimentalConfig`: options (key, group, name, description, benefit, risk Low/Medium/High, risk note, when it
+  applies, `safe` flag), static booleans read by hot paths, global file `config/oculus-experimental.properties`.
+  "Enable safe optimizations" turns on `safe` options only (never vertex writing or shadow interval); "Reset" restores all defaults.
+- `gui/screen/ExperimentalScreen`: grouped two-column toggles drawn with GuiUtil, tooltip, right/shift-click cycles back.
+  ShaderPackScreen top row: 3 x 120 buttons (folder label shortened to "Open Pack Folder..."), bottom row also 120 wide.
+- `pipeline/PassTiming`: GL timestamp queries (nestable) + nanoTime per pass, ring of 4 frames, results read only when available;
+  overlay via Forge `RenderGuiEvent.Post` (hidden with F3), log every 10/30/60 s. Hooks in NewWorldRenderingPipeline phases and
+  MixinDHShadowPassGuard (DH LODs / dh_shadow, nested). Nothing runs while overlay and log are off.
+- Batch 2 (next): vertex writing (16-18), shadow update interval (20, with 21). Item 14 skipped (no effect in our shadow pass),
+  19 needs MixinExtras. The sandbox cannot compile (no Minecraft/Forge jars, Maven blocked): javac on the changed files showed only
+  missing-Minecraft errors; the user's Gradle build is the real check.
 
 ## Other fixes
 - `FullyBufferedMultiBufferSource.getBuffer` throws IllegalArgumentException for a null RenderType (and IllegalStateException if a
