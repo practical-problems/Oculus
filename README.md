@@ -14,29 +14,17 @@ Oculus is not and never will be compatible with Optifine!
 ## Dependencies
 Oculus requires [Rubidium](https://www.curseforge.com/minecraft/mc-mods/rubidium) made by Asek3!
 
-## Notes
+## Features
+* Performance. Oculus should fully utilize your graphics card when paired with optimization mods like Rubidium.
 
-This is a fork of Teqed's `1.19.2` branch (Oculus 1.6.9) to make **Distant Horizons 3.3.3** work with Oculus on Forge 1.19.2.
-The version label says "1.8.0" only so DH's version check passes (the mod itself is based on 1.6.9).
+* Mod compatibility. Oculus should make a best effort to be compatible with modded environments.
 
-**Status:** DH LODs render and composite with shaders on. DH-aware shader features are NOT implemented yet: `dh_terrain`,
-`dh_water`, `dh_shadow`, the LOD depth texture (`dhDepthTex`), the DH uniforms and macros. Because of that, packs cannot see
-LOD depth (clouds and fog can draw over LODs), LODs don't cast shadows, and there can be a brightness seam where LODs meet
-chunks. Backporting the real Oculus 1.8.0 DH support is the planned next step.
+* Backwards compatibility. All existing ShadersMod / OptiFine shader packs should just work on Oculus, without any modifications required.
 
-Only v1/legacy shader packs work currently, since v2 packs need the 1.8.0 features above.
+* A well-organized codebase. I'd like for working with Oculus code to be a pleasant experience overall.
 
-### Changes
-- `MixinDHCopyShader`: redirects DH's copy pass into the shader pack's framebuffer (DH 3.x; replaces the old `MixinDHApplyShader`).
-- `MixinDHSkipShadowPass`: stops DH from rendering its LODs during Oculus's shadow pass, which fixed light leaks and a large FPS cost.
-- Mekanism fixes ported from Asek3's 1.19.2 branch and Mekalus: MekaSuit and flamethrower shaders, with a corrected flame vertex format.
-- Flywheel `WorldAttached` memory leak fix (from Mekalus).
-
-### Building
-Needs JDK 17 (JDK 21+ fails to compile). Put `libs/DistantHorizons-3.3.3-1.19.2-fabric-forge.jar` in `libs/` (compile-only), then `./gradlew build`.
-
-## Credits
-Based on Teqed's Oculus 1.19.2 branch, Asek3's Oculus, Askadar's DH spoof, and KostromDan's Mekalus fork. Original Iris by coderbot, IMS212 and contributors.
+## Discord
+[![](https://dcbadge.vercel.app/api/server/UCsyn5RS4s)](https://discord.gg/UCsyn5RS4s)
 
 ## Contributors
 <a href="https://github.com/Asek3/Oculus/graphs/contributors">
@@ -47,4 +35,5 @@ Based on Teqed's Oculus 1.19.2 branch, Asek3's Oculus, Askadar's DH spoof, and K
 
 [LGPL-3.0 license](https://github.com/Asek3/Oculus/blob/1.16.5/LICENSE)
 
-
+## Consider supporting 
+[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dasek3%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/asek3)
