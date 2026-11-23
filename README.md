@@ -52,7 +52,9 @@ DH-aware pack or turning shaders off brings them back without a restart.
 
 **Oculus Flywheel Compat** (`oculus-flywheel-compat-forge1.19.2+1.0.3b`) works with this build and raised FPS with Photon by about a
 third around Create contraptions. Choose your shader setting before joining a world: turning shaders on while in a world crashes the
-game in that mod's vertex writer (its bug, not Oculus's).
+game (a native access violation). The mod switches its unsafe vertex reader and writer to a 52-byte vertex format as soon as shaders
+are on, but Create models already built with shaders off are still in the 32-byte format, so the reader runs past the end of that
+data. It is that mod's bug, not Oculus's.
 
 **Known DH quirks (not Oculus bugs):** modded blocks that give off even a little light (e.g. Serene Shrubbery plants) can glow as LODs
 with shaders, because DH classifies them as illuminated; add them to DH's ignored-blocks list. DH's own clouds clash with pack clouds;

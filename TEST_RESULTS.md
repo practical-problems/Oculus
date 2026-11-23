@@ -63,7 +63,7 @@ At the mountain view, 64 and 128 chunks gave identical images.
 | Test | Result |
 |---|---|
 | Oculus Flywheel Compat 1.0.3b, Photon | Pass: 67-81 -> 90-110 FPS near Create builds; shaders off unchanged (227-258) |
-| Oculus Flywheel Compat, turning shaders on inside a world | Crash in that mod's vertex reader (its bug). Workaround: choose shaders before joining a world |
+| Oculus Flywheel Compat, turning shaders on inside a world | Crash (access violation) in that mod's unsafe vertex reader: existing 32-byte vertex data is read with its 52-byte shader stride. Its bug. Workaround: choose shaders before joining a world |
 | Pack without `dh_terrain` (Sildur's Vibrant 1.41) | Pass: LODs hidden while active; back after switching to Photon, no restart |
 | Sildur's Vibrant 1.541, Complementary r5.10 + Euphoria 1.11.2, Photon v1.3b | Pass: render correctly with LODs |
 | `program.X.enabled` expressions (Bliss `TRANSLUCENT_ENTITIES && IS_IRIS`) | Pass: Bliss loads, its six "defaulting to true" warnings are gone, no new warnings |
