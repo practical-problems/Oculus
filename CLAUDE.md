@@ -65,7 +65,9 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
    Note: DH shows the "/total" on both F3 lines only while its normal `disableFrustumCulling` is off.
    All Bliss DH-shadowmap tests used shadow map resolution 4096 and DH render distance 128 chunks.
    Bliss shadowDistance test (hill, facing the sun, culling on): 128 chunks 91/175, 135-153 FPS; 64 chunks 91/175, 139-150; 32 chunks
-   91/175, 143-148. The shadow count does not depend on shadow distance: neither 1.8.0 nor we cull LODs outside the shadow map's area.
+   91/175, 143-148; 8 chunks 91/175, 148-149. The shadow count does not depend on shadow distance: neither 1.8.0 nor we cull LODs
+   outside the shadow map's area. Possible extra optimization (not in 1.8.0): also cull sections outside the shadow ortho box; it only
+   helps DH shadowmap with a shadow distance well below the DH distance, a rare combination, so left for later.
 Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Photon v1.3b (renders), Bliss v2.1.2 (renders, LOD shadows).
 
 ## Past issues and fixes (for context)
