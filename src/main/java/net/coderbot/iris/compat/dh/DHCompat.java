@@ -119,7 +119,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 
 	/**
 	 * Oculus 1.8.0 draws DH's generic objects with the pack's dh_generic program, falling back to dh_terrain. If the
-	 * program cannot be built, DH keeps drawing them with its own shader (the old behaviour) and LODs are unaffected.
+	 * program cannot be built, generic objects are hidden while the pack is active (see the render event) and LODs are unaffected.
 	 */
 	private void createGenericProgram(NewWorldRenderingPipeline pipeline, ProgramSet programs, ProgramSource terrain) {
 		Optional<ProgramSource> ownGeneric = programs.getDhGeneric();
@@ -129,7 +129,7 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 		} catch (RuntimeException e) {
 			genericProgram = null;
 			Iris.logger.warn("Could not build the Distant Horizons generic object program from " + source.getName()
-				+ "; DH clouds and beacon beams keep DH's own shader.", e);
+				+ "; DH clouds and beacon beams are hidden while this pack is active.", e);
 			return;
 		}
 		genericFramebuffer = ownGeneric.isPresent() ? pipeline.createDHFramebuffer(source, false) : null;
@@ -167,6 +167,12 @@ public final class DHCompat implements DHCompatBridge.Lifecycle {
 					// DH also runs its generic renderer in the LOD shadow pass; clouds and beacon beams have no place
 					// in the pack's shadow map (and would be drawn there with a gbuffer program), so skip them.
 					if (net.coderbot.iris.shadows.ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+						event.cancelEvent();
+						return;
+					}
+					// The pack's program could not be built: DH's own shader would write plain colours into the pack's
+					// buffers, which many packs use for packed data (garbage colours). Hide them, as for LODs without dh_terrain.
+					if (active.genericProgram == null) {
 						event.cancelEvent();
 						return;
 					}

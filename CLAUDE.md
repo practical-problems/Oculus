@@ -140,7 +140,11 @@ Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are do
    on resize) and only re-attached on a new texture id; now addExternalDepthAttachment + a DH depth generation counter. Result: log
    "use dh_generic", beam correct, hidden behind terrain, still hidden after windowed/fullscreen switch. The copy needed
    `blend.dh_generic = off` (Bliss packs gbuffer data; without it DH's blend stays on, like 1.8.0, and the beam smears pink/yellow).
-   If the program fails to build, DH keeps its own shader. Verified offline: the vendored glsl-transformer patches a legacy test
+   If the program fails to build, generic objects are hidden while the pack is active (dev, untested in game; before, DH's own
+   shader drew plain colours into the pack's packed buffers). Edge cases: mod-submitted API boxes take the same path as beacons/clouds
+   (untested; per-group `DhApiRenderableBoxGroupShading` is ignored, as in 1.8.0); DH's direct (non-instanced) path is unreachable
+   (needs GL without instancing; DH disables generic rendering on macOS); hardware tested only on NVIDIA/Windows, injected GLSL
+   reviewed for strict-compiler issues (none found; a glslang build was not allowed in the sandbox). Verified offline: the vendored glsl-transformer patches a legacy test
    shader and Bliss/Photon dh_terrain without errors (harness: /tmp/tx with stubs for log4j/fastutil/LWJGL constants/annotations).
 3. (Done as commit 11: the four 1.8.0 frustum mixins are replaced by one `DhShadowCullingFrustum` wrapper.)
 4. Small fixes (tested 2026-11-23: Bliss loads, both warnings gone, no new ones): `program.X.enabled` values with `&&`/`||`/`!`/parentheses are now evaluated by
