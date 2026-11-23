@@ -140,7 +140,8 @@ Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are do
    on resize) and only re-attached on a new texture id; now addExternalDepthAttachment + a DH depth generation counter. Result: log
    "use dh_generic", beam correct, hidden behind terrain, still hidden after windowed/fullscreen switch. The copy needed
    `blend.dh_generic = off` (Bliss packs gbuffer data; without it DH's blend stays on, like 1.8.0, and the beam smears pink/yellow).
-   If the program fails to build, generic objects are hidden while the pack is active (dev, untested in game; before, DH's own
+   If the program fails to build, generic objects are hidden while the pack is active (tested 2026-11-23 with a junk line in the Bliss
+   copy's dh_generic.fsh: warning + parse error, no crash, beam gone, back after fixing; before, DH's own
    shader drew plain colours into the pack's packed buffers). Edge cases: mod-submitted API boxes take the same path as beacons/clouds
    (untested; per-group `DhApiRenderableBoxGroupShading` is ignored, as in 1.8.0); DH's direct (non-instanced) path is unreachable
    (needs GL without instancing; DH disables generic rendering on macOS); hardware tested only on NVIDIA/Windows, injected GLSL
@@ -158,6 +159,11 @@ See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 
 
 Non-DH ports from other forks (Emberlens so far) are tracked in `BACKPORT_CANDIDATES.md`, only ones that work with stock
 Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported or tested. DH backport comes first.
+
+## Other fixes
+- `FullyBufferedMultiBufferSource.getBuffer` throws IllegalArgumentException for a null RenderType (and IllegalStateException if a
+  wrapping function returns null), so crashes like Asek3/Oculus#874 name the calling mod. No mod in the user's pack passes null;
+  only a regression check (normal entity rendering) is possible.
 
 ## Lifecycle edge cases (code review 2026-11-23, not yet tested in game)
 - Dimension change: MixinMinecraft_PipelineManagement destroys all pipelines and builds a new one, so DHCompat.destroy() unbinds

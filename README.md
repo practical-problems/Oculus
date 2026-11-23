@@ -110,6 +110,10 @@ These come from other mods or shader packs; they are listed so they are not repo
 - DH generic rendering (beacon beams, DH clouds, API boxes), ported from Oculus 1.8.0: the pack's `dh_generic` program (or `dh_terrain`),
   a shader transformer for DH's instanced boxes, the LOD matrices and lightmap, and DH's generic object shader override. If the program
   cannot be built, DH keeps its own shader. Unlike 1.8.0, generic objects are skipped in the LOD shadow pass.
+- If a pack's DH generic program cannot be built, DH's beams and clouds are hidden while that pack is active (before, DH drew them
+  with its own shader into the pack's buffers, which can show garbage colours).
+- Entity batching rejects a `null` RenderType right away, so a crash caused by another mod names that mod instead of Oculus
+  (same code as Asek3/Oculus#874 on 1.20.1).
 - Fixes for packs written for Iris 1.7+: `shaders.properties` no longer has `IS_IRIS`/`DISTANT_HORIZONS` erased or `#ifndef` lines
   broken by text replacement (this broke Bliss, Photon and parts of Euphoria), and `dhRenderDistance`/`dhNearPlane`/`dhFarPlane`
   are visible to `shaders.properties` expressions (Photon rendered black without it).
