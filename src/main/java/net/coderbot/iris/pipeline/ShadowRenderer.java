@@ -134,6 +134,9 @@ public class ShadowRenderer {
 		this.entityFrustumHolder = new FrustumHolder();
 
 		this.fov = shadowDirectives.getFov();
+		Iris.logger.info("Shadow map: distance {} blocks, depth range {} .. {} (pack values {} / {}){}",
+			halfPlaneLength, ShadowMatrices.resolveNearPlane(nearPlane), ShadowMatrices.resolveFarPlane(farPlane),
+			nearPlane, farPlane, fov != null ? ", perspective fov " + fov : "");
 		this.targets = shadowRenderTargets;
 
 		if (shadow != null) {
