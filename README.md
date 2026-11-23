@@ -72,15 +72,18 @@ Backporting the rest of the real Oculus 1.8.0 DH support is ongoing. In-game tes
   instead of drawing them into a buffer the pack uses for something else.
 - `dh_shadow` support: DH shadow program and shadow-map framebuffer, sun matrices, no clearing of the shadow map by DH,
   `dhShadow.enabled`, and `shadowNearPlane`/`shadowFarPlane` (Iris 1.7+) so distant LODs fit in the shadow map.
-- Shadow-pass LOD culling: DH culls LOD sections against Oculus's shadow frustum (same rules as Oculus 1.8.0), with the frustum's
-  far plane extended to DH's render distance so distant LOD shadows are kept.
+- Shadow-pass LOD culling (only while a pack's `dh_shadow` is active): DH culls LOD sections against Oculus's shadow frustum, with the
+  same rules as Oculus 1.8.0 but in one class instead of four mixins. The frustum's far plane is extended to DH's render distance, read
+  live from DH's config, so distant LOD shadows are kept; unlike 1.8.0 the vanilla near plane is kept, so the frustum is never
+  smaller than before and nearby shadows cannot be culled.
 - Fixes for packs written for Iris 1.7+: `shaders.properties` no longer has `IS_IRIS`/`DISTANT_HORIZONS` erased or `#ifndef` lines
   broken by text replacement (this broke Bliss, Photon and parts of Euphoria), and `dhRenderDistance`/`dhNearPlane`/`dhFarPlane`
   are visible to `shaders.properties` expressions (Photon rendered black without it).
-- `program.X.enabled` boolean expressions (`&&`, `||`, `!`, parentheses, `defined()`), and DH's SSAO/fog overrides now name
-  Oculus as the caller, so DH no longer logs a deprecated-API warning.
+- `program.X.enabled` values are evaluated as boolean expressions (`&&`, `||`, `!`, parentheses, `defined()`), so programs a pack
+  switches with combined options (Bliss's `TRANSLUCENT_ENTITIES && IS_IRIS`) follow those options.
+- DH's SSAO and fog overrides under shader packs now pass Oculus as the caller, so DH no longer logs a deprecated-API warning.
 - Mekanism fixes ported from Asek3's 1.19.2 branch and Mekalus: MekaSuit and flamethrower shaders, with a corrected flame vertex format.
-- Flywheel `WorldAttached` memory leak fix (from Mekalus).
+- Memory leak fix for Flywheel's `WorldAttached` (Create's renderer; from Mekalus). Unrelated to the Oculus Flywheel Compat mod.
 
 ### Building
 Needs JDK 17 (JDK 21+ fails to compile). Put `libs/DistantHorizons-3.3.3-1.19.2-fabric-forge.jar` in `libs/` (compile-only), then `./gradlew build`.
