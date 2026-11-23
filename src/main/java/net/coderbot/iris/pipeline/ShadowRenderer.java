@@ -363,7 +363,9 @@ public class ShadowRenderer {
 	/**
 	 * Player projection used to build the advanced shadow frustum. When LODs are drawn into the shadow map, its far
 	 * plane is moved out to Distant Horizons' far plane so LODs past the vanilla view distance are not culled
-	 * (same as Oculus 1.8.0, which uses DHCompat.getProjection() here).
+	 * (Oculus 1.8.0 does this with DHCompat.getProjection()). Unlike 1.8.0 the vanilla near plane is kept: DH's near
+	 * plane sits several chunks ahead of the camera with shaders on, and using it could cull shadows of nearby blocks.
+	 * The result is never smaller than the vanilla frustum.
 	 */
 	private static net.coderbot.iris.vendored.joml.Matrix4f getCullingProjection() {
 		net.coderbot.iris.vendored.joml.Matrix4f projection =
@@ -372,9 +374,8 @@ public class ShadowRenderer {
 		if (!DHCompatBridge.hasShadowProgram() || dhFar <= 0.0F) {
 			return projection;
 		}
-		float dhNear = Math.max(DHCompatBridge.getNearPlane(), 0.05F);
 		return new net.coderbot.iris.vendored.joml.Matrix4f().setPerspective(projection.perspectiveFov(),
-			projection.m11() / projection.m00(), dhNear, dhFar);
+			projection.m11() / projection.m00(), 0.05F, dhFar);
 	}
 
 	public void setupShadowViewport() {

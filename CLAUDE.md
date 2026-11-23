@@ -54,8 +54,9 @@ MekaSuit, Mekanism flamethrower. Commits, oldest first:
 11. Shadow-pass LOD culling (tested 2026-11-23, Bliss v2.1.2 DH shadowmap): `DhShadowCullingFrustum` (bound as `IDhApiShadowCullingFrustum` only when dh_shadow
    is active) asks `ShadowRenderer.FRUSTUM` (this frame's terrain shadow frustum): Advanced/Reversed -> plane test only, BoxCulling ->
    distance box, CullEverything -> false, else true. Same rules as 1.8.0's four frustum mixins, done as one wrapper instead of mixins.
-   With dh_shadow active the advanced frustum is built from a projection with DH's near/far planes (1.8.0 uses DHCompat.getProjection()),
-   otherwise its far plane (vanilla view distance) would cull far LODs. DH's F3 line "Shadow VBO Render Count: [visible/total]" shows it;
+   With dh_shadow active the advanced frustum is built from a projection with DH's far plane (1.8.0 uses DHCompat.getProjection()),
+   otherwise its far plane (vanilla view distance) would cull far LODs. Near plane stays 0.05 (1.8.0 uses DH's, ~20% of render distance
+   with shaders, which could cull nearby chunk shadows); so the frustum is never smaller than vanilla's. DH's F3 line "Shadow VBO Render Count: [visible/total]" shows it;
    DH config `disableShadowPassFrustumCulling` turns it off for A/B tests.
    Results (DH still generating chunks in the background): facing the sun 82/181 shadow sections, 140-149 FPS vs 181/181, 118-133 off;
    facing the sun at time 11000, 91/175, 150-152 FPS vs 175/175, 132-137 off. Facing away from a low sun nothing is culled (184/184 both
