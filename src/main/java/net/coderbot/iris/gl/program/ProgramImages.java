@@ -31,13 +31,18 @@ public class ProgramImages {
 		}
 
 		if (net.coderbot.iris.config.ExperimentalConfig.indexedLoops) {
-			for (int i = 0; i < imageBindings.size(); i++) {
-				imageBindings.get(i).update();
-			}
+			updateIndexed();
 		} else {
 			for (ImageBinding imageBinding : imageBindings) {
 				imageBinding.update();
 			}
+		}
+	}
+
+	// Experimental "Indexed loops" (Emberlens). Kept out of update() so that method's calls match the original's.
+	private void updateIndexed() {
+		for (int i = 0; i < imageBindings.size(); i++) {
+			imageBindings.get(i).update();
 		}
 	}
 

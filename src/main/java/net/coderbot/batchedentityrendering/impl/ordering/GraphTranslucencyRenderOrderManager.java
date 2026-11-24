@@ -95,14 +95,7 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
     @Override
     public void reset() {
         if (net.coderbot.iris.config.ExperimentalConfig.reuseOrderingGraphs) {
-            // Experimental "Reuse ordering graphs" (Emberlens): only replace graphs that were used.
-            for (TransparencyType type : TransparencyType.values()) {
-                Digraph<RenderType> graph = types.get(type);
-
-                if (graph == null || graph.getVertexCount() > 0) {
-                    types.put(type, new MapDigraph<>());
-                }
-            }
+            resetReusingGraphs();
             return;
         }
 
@@ -116,17 +109,34 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
 
 	@Override
     public void resetType(TransparencyType type) {
-		if (net.coderbot.iris.config.ExperimentalConfig.reuseOrderingGraphs) {
-			Digraph<RenderType> graph = types.get(type);
-
-			if (graph != null && graph.getVertexCount() == 0) {
-				return;
-			}
+		if (net.coderbot.iris.config.ExperimentalConfig.reuseOrderingGraphs && isUnusedGraph(type)) {
+			return;
 		}
 
         // TODO: Is reallocation efficient?
 		types.put(type, new MapDigraph<>());
 	}
+
+    // Experimental "Reuse ordering graphs" (Emberlens): only replace graphs that were used. These helpers keep the
+    // original methods' calls unchanged (mixin injection points by ordinal still match).
+    private void resetReusingGraphs() {
+        for (TransparencyType type : TransparencyType.values()) {
+            Digraph<RenderType> graph = types.get(type);
+
+            if (graph == null || graph.getVertexCount() > 0) {
+                types.put(type, new MapDigraph<>());
+            }
+        }
+    }
+
+    private boolean isUnusedGraph(TransparencyType type) {
+        Digraph<RenderType> graph = types.get(type);
+        return graph != null && graph.getVertexCount() == 0;
+    }
+
+    private static boolean isEmptyGraph(Digraph<RenderType> graph) {
+        return graph.getVertexCount() == 0;
+    }
 
     public List<RenderType> getRenderOrder() {
         int layerCount = 0;
@@ -138,7 +148,7 @@ public class GraphTranslucencyRenderOrderManager implements RenderOrderManager {
         List<RenderType> allLayers = new ArrayList<>(layerCount);
 
         for (Digraph<RenderType> graph : types.values()) {
-            if (net.coderbot.iris.config.ExperimentalConfig.reuseOrderingGraphs && graph.getVertexCount() == 0) {
+            if (net.coderbot.iris.config.ExperimentalConfig.reuseOrderingGraphs && isEmptyGraph(graph)) {
                 continue;
             }
 

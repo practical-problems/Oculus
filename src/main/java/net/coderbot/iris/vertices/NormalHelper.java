@@ -214,9 +214,11 @@ public abstract class NormalHelper {
 		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
 		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
 		// Experimental "Skip bitangent normalize" (Emberlens): only the sign of dot(bitangent, predicted) is used
-		// below, and scaling by a positive factor does not change it.
+		// below, and scaling by a positive factor does not change it. bitcoeff stays declared at method level so the
+		// method's local variables are the same as the original's (mixins that capture locals still match).
+		float bitcoeff = 1.0f;
 		if (!net.coderbot.iris.config.ExperimentalConfig.skipBitangentNormalize) {
-			float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
+			bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
 			bitangentx *= bitcoeff;
 			bitangenty *= bitcoeff;
 			bitangentz *= bitcoeff;
@@ -305,9 +307,11 @@ public abstract class NormalHelper {
 		float bitangenty = f * (-deltaU2 * edge1y + deltaU1 * edge2y);
 		float bitangentz = f * (-deltaU2 * edge1z + deltaU1 * edge2z);
 		// Experimental "Skip bitangent normalize" (Emberlens): only the sign of dot(bitangent, predicted) is used
-		// below, and scaling by a positive factor does not change it.
+		// below, and scaling by a positive factor does not change it. bitcoeff stays declared at method level so the
+		// method's local variables are the same as the original's (mixins that capture locals still match).
+		float bitcoeff = 1.0f;
 		if (!net.coderbot.iris.config.ExperimentalConfig.skipBitangentNormalize) {
-			float bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
+			bitcoeff = rsqrt(bitangentx * bitangentx + bitangenty * bitangenty + bitangentz * bitangentz);
 			bitangentx *= bitcoeff;
 			bitangenty *= bitcoeff;
 			bitangentz *= bitcoeff;

@@ -191,13 +191,13 @@ public class CustomUniforms implements FunctionContext {
 			}
 		}
 		this.locationMap.put(targetHolder, locations);
-		this.pushLists.remove(targetHolder);
+		forgetPushList(targetHolder);
 	}
 
 	public void mapholderToPass(LocationalUniformHolder holder, Object pass) {
 		locationMap.put(pass, locationMap.remove(holder));
-		pushLists.remove(holder);
-		pushLists.remove(pass);
+		forgetPushList(holder);
+		forgetPushList(pass);
 	}
 
 
@@ -209,16 +209,7 @@ public class CustomUniforms implements FunctionContext {
 
 	public void push(Object pass) {
 		if (net.coderbot.iris.config.ExperimentalConfig.changedOnlyUniforms) {
-			PushList list = this.pushLists.get(pass);
-			if (list == null) {
-				Object2IntMap<CachedUniform> uniforms = this.locationMap.get(pass);
-				if (uniforms == null) {
-					return;
-				}
-				list = new PushList(uniforms);
-				this.pushLists.put(pass, list);
-			}
-			list.push();
+			pushChanged(pass);
 			return;
 		}
 
@@ -232,6 +223,25 @@ public class CustomUniforms implements FunctionContext {
 	// version last uploaded to that pass's program. GL keeps uniform values per program, so an unchanged value
 	// does not need to be uploaded again.
 	private final Map<Object, PushList> pushLists = new Object2ObjectOpenHashMap<>();
+
+	// Kept out of assignTo/mapholderToPass/push so those methods' calls match the original's (mixin injection points
+	// by ordinal still match).
+	private void forgetPushList(Object key) {
+		this.pushLists.remove(key);
+	}
+
+	private void pushChanged(Object pass) {
+		PushList list = this.pushLists.get(pass);
+		if (list == null) {
+			Object2IntMap<CachedUniform> uniforms = this.locationMap.get(pass);
+			if (uniforms == null) {
+				return;
+			}
+			list = new PushList(uniforms);
+			this.pushLists.put(pass, list);
+		}
+		list.push();
+	}
 
 	private static final class PushList {
 		private final CachedUniform[] uniforms;

@@ -57,9 +57,7 @@ public class ProgramSamplers {
 		int activeTexture = GlStateManagerAccessor.getActiveTexture();
 
 		if (net.coderbot.iris.config.ExperimentalConfig.indexedLoops) {
-			for (int i = 0; i < samplerBindings.size(); i++) {
-				samplerBindings.get(i).update();
-			}
+			updateIndexed();
 		} else {
 			for (SamplerBinding samplerBinding : samplerBindings) {
 				samplerBinding.update();
@@ -67,6 +65,13 @@ public class ProgramSamplers {
 		}
 
 		RenderSystem.activeTexture(GL20C.GL_TEXTURE0 + activeTexture);
+	}
+
+	// Experimental "Indexed loops" (Emberlens). Kept out of update() so that method's calls match the original's.
+	private void updateIndexed() {
+		for (int i = 0; i < samplerBindings.size(); i++) {
+			samplerBindings.get(i).update();
+		}
 	}
 
 	public void removeListeners() {

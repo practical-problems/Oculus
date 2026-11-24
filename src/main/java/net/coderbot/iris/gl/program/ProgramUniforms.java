@@ -47,14 +47,19 @@ public class ProgramUniforms {
 
 	private void updateStage(ImmutableList<Uniform> uniforms) {
 		if (net.coderbot.iris.config.ExperimentalConfig.indexedLoops) {
-			for (int i = 0; i < uniforms.size(); i++) {
-				uniforms.get(i).update();
-			}
+			updateIndexed(uniforms);
 			return;
 		}
 
 		for (Uniform uniform : uniforms) {
 			uniform.update();
+		}
+	}
+
+	// Experimental "Indexed loops" (Emberlens). Kept out of updateStage() so that method's calls match the original's.
+	private static void updateIndexed(ImmutableList<Uniform> uniforms) {
+		for (int i = 0; i < uniforms.size(); i++) {
+			uniforms.get(i).update();
 		}
 	}
 

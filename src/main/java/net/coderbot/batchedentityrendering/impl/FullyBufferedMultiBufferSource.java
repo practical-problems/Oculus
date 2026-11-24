@@ -89,12 +89,7 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		renderOrderManager.begin(renderType);
 
 		if (useFastAffinities) {
-			int fastAffinity = fastAffinities.getAndMoveToLast(renderType);
-			if (fastAffinity == -1) {
-				fastAffinity = fastAffinities.size() < builders.length ? fastAffinities.size() : fastAffinities.removeFirstInt();
-				fastAffinities.putAndMoveToLast(renderType, fastAffinity);
-			}
-			return builders[fastAffinity].getBuffer(renderType);
+			return getBufferFast(renderType);
 		}
 
 		Integer affinity = affinities.get(renderType);
@@ -120,6 +115,17 @@ public class FullyBufferedMultiBufferSource extends MultiBufferSource.BufferSour
 		}
 
 		return builders[affinity].getBuffer(renderType);
+	}
+
+	// Experimental "Fast entity buffer list" (Emberlens). Kept out of getBuffer() so that method's calls are the same
+	// as the original's (mixin injection points by ordinal still match).
+	private VertexConsumer getBufferFast(RenderType renderType) {
+		int fastAffinity = fastAffinities.getAndMoveToLast(renderType);
+		if (fastAffinity == -1) {
+			fastAffinity = fastAffinities.size() < builders.length ? fastAffinities.size() : fastAffinities.removeFirstInt();
+			fastAffinities.putAndMoveToLast(renderType, fastAffinity);
+		}
+		return builders[fastAffinity].getBuffer(renderType);
 	}
 
 	private void removeReady() {
