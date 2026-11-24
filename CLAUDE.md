@@ -65,11 +65,13 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
 - Faintly glowing modded blocks (Serene Shrubbery, AE2 certus buds) glow as LODs: DH behaviour; add them to DH's
   `ignoredRenderBlockCsv` (exact IDs).
 - DH clouds clash with pack clouds; they are hidden when the pack turns vanilla clouds off.
-- Not ours: Oculus Flywheel Compat crashes when shaders are switched on inside a world (fix planned with the integration); a rare
-  `NoClassDefFoundError: DhApiWorldUnloadEvent` on Save and Quit (DH/Java 24); Photon's harmless "#endif without #if" log line;
+- Not ours: Oculus Flywheel Compat crashes when shaders are switched on inside a world (fix planned with the integration); a one-off
+  `NoClassDefFoundError: DhApiWorldUnloadEvent` on Save and Quit (seen once, never came back; suspects DH/Java 24); Photon's harmless "#endif without #if" log line;
   YUNG's "broken basalt columns" log spam while DH generates the Nether.
 
 ## Testing tips (from the user)
+- A small test instance (Forge 43.5.0, Java 24 + ZGC like the main pack, only Spectacles/Embeddium/DH plus Create or Mekanism when
+  needed) is planned for quick iterations; the 400-mod pack stays the final check.
 - Render distance 4 with DH 128 chunks; one Spectacles jar enabled; send `latest.log` (Prism's console stops at 100,000 lines).
 - LOD shadows: fly ~25 blocks up so the ground below is LODs, or put a tall LOD object between you and a low sun; compare on/off
   from the same spot after chunks settle. DH's F3 line "Shadow VBO Render Count" shows shadow culling.
