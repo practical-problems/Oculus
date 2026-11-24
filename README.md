@@ -15,6 +15,20 @@ Spectacles is Oculus 1.6.9 for Forge 1.19.2 with the Distant Horizons 3.3.3 supp
 DH beacon beams and clouds. Tested with Complementary + Euphoria, Photon, Bliss and Sildur's Vibrant ([TEST_RESULTS.md](TEST_RESULTS.md)).
 Work in progress (dev branch only, not in this release): optional optimizations from Emberlens and a CPU/GPU timing overlay.
 
+## Shader pack support
+
+What was tested with Distant Horizons 3.3.3 (details in [TEST_RESULTS.md](TEST_RESULTS.md)):
+
+| Pack | LOD terrain/water | LOD shadows | DH beacons/clouds | Notes |
+|---|---|---|---|---|
+| Bliss v2.1.2 | Yes | Yes, with Bliss's "DH shadowmap" option | Beams yes; DH clouds hidden (Bliss draws its own) | Far LOD shadows are faint (Bliss's DH shadowmap is experimental). Beam has a gap within ~32 blocks of you (Bliss's LOD overdraw cutoff) |
+| Complementary Reimagined r5.10 + Euphoria Patches 1.11.2 | Yes | No (not supported by the pack) | Beams yes; DH clouds only with the cloud style set to vanilla | |
+| Photon v1.3b | Yes | No (the pack turns them off) | Beams yes; DH clouds hidden (Photon draws its own) | LOD beams glow much brighter than vanilla beams (Photon treats them as full light sources) |
+| Sildur's Vibrant 1.541 | Yes | Not tested | Not tested | |
+| Sildur's Vibrant 1.41 | Hidden | No | No | Made before DH support: LODs are hidden while it is active instead of drawn wrong |
+
+Packs without DH support get the same treatment as Sildur's 1.41. With shaders off, LODs render as normal.
+
 ## Disclaimer
 Like Oculus, Spectacles is not compatible with OptiFine.
 
