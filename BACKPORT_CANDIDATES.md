@@ -285,6 +285,16 @@ wasted attempts.
 
 **Experimental page.** Its own option, not part of "Enable safe optimizations"; risk Medium; applies live (no reload); "Reset"
 returns it to 1.
+- Suggested starting value N=2 (user, 2026-11-24): the step from 1 to 2 gives the biggest extra saving (`C_opaque/2`; 2 -> 3 adds
+  `C_opaque/6`, 3 -> 4 adds `C_opaque/12`) with the least lag. Caveat: that first step pays the whole copy, so N=2 needs `C_opaque`
+  of at least 2x the copy's total cost to break even (N=4 only 1.33x); raise N only if the overlay's prediction says N=2 is close
+  to break-even.
+- Tooltip note on shadow resolution and bandwidth (inform, do not tell players to lower it): the copy cost scales with pixel count,
+  so 4096 costs about 4x the copy of 2048, while `C_opaque` (mostly LOD geometry) drops much less, so the cache pays off more easily
+  at 2048. At 4096 the copy moves a lot of GPU memory: about 384 MB per frame with depth plus two colour targets, about 23 GB/s at
+  60 FPS and 55 GB/s at 144 FPS (depth only: about 128 MB per frame, 8-18 GB/s). At 2048 it is a quarter of that (about 96 MB per
+  frame, 6-14 GB/s). Lower resolution costs quality (Bliss's DH shadowmap over 2,048 blocks: about 2 blocks per texel instead of
+  1), so it stays the player's choice.
 
 **Measure first, then predict (cost model: user, 2026-11-24).** Before writing code: `PassTiming` overlay at a low sun, render
 distance 4, DH 128 chunks, Bliss DH shadowmap, same spot, comparing `SHADOW` and `DH_SHADOW` (split into opaque and water), plus a
