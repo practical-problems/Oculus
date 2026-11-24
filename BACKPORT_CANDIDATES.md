@@ -111,9 +111,22 @@ depth writes on. Inspect before assuming order independence (not automatically i
   `shadowcolor1`, while near shadow programs do. Original order with LODs drawn after near geometry: a nearer LOD fragment replaces the
   depth but `shadowcolor1` keeps the near block's value. Cache order: the near fragment fails the depth test, so `shadowcolor1` keeps
   the cleared value. Compare the `DRAWBUFFERS`/`RENDERTARGETS` of `dh_shadow` with the near shadow programs.
-Two layers of checking: static (pack directives and shader source, at pipeline build) and a one-time runtime check of the actual GL
-state (depth func, depth mask, colour masks, draw buffers) during the first refresh of a pipeline. `glGet*` is a sync point, so only
-once, then cached.
+Two layers of checking: static (pack directives and shader source, at pipeline build) and runtime checks of the actual GL state
+(depth func, depth mask, colour masks, draw buffers, blend).
+
+State must be checked for every draw whose order changes, on every refresh, not just once (user, 2026-11-24: other render types can
+change blending, depth or colour masks later). Which draws change order: the shadow pass draws terrain solid, cutout, cutout-mipped,
+then entities, block entities, then translucent terrain (`ShadowRenderer`), and DH draws opaque LODs from inside the solid-layer
+call. So in today's path the opaque LODs already come before cutout, entities, block entities and translucents: those see the same
+order with the cache, whatever render-type state they use (eyes, no depth write, etc.). Only near solid-layer terrain can swap
+places with the LODs, and only if DH draws after it in that call. So:
+- The LOD draw itself: our refresh sets the required state explicitly through `RenderSystem` before DH draws (depth test on,
+  `LEQUAL`, depth write on, colour masks per `dh_shadow`'s draw buffers), so it does not depend on what ran before.
+- Near solid-layer terrain: check its state on every refresh from Minecraft's `GlStateManager` cached state, which is free (no GPU
+  sync). Once per pipeline, also confirm with real `glGet*` calls that the cached state matches GL (a sync point, so only once; it
+  catches mods that bypass `GlStateManager`). A mismatch counts as unsupported pack behaviour (cache off, logged).
+- First, check DH's injection point: if DH draws opaque LODs at the start of the solid-layer call, nothing changes order at all and
+  only the LOD draw's own state matters.
 
 **Matrix snapshot, frozen in world space.** The shadow modelview is camera-relative: `ShadowMatrices.createModelViewMatrix` is the
 sun rotation plus `snapModelViewToGrid`, an offset from the camera position within the `shadowIntervalSize` grid, and vertices in the
@@ -228,9 +241,24 @@ Classify why a refresh did not complete:
   current pipeline and log the reason once; a new pipeline (pack reload, option change, dimension change) tries again.
 - Unsupported pack behaviour (pack checks above, static or the one-time runtime check): disable caching until the pack or its options
   change, log once.
-- Unexplained failures (exception during the refresh, completion signal never reached while DH is ready): retry a few times (e.g. 3
-  in a row), then disable for the current pipeline and log.
-In every case the frame itself renders with today's path, so the worst case is today's cost plus at most a few wasted attempts.
+- Completion signal never reached while DH is ready (no exception, e.g. DH caught its own error): retry a few times (e.g. 3 in a
+  row), then disable for the current pipeline and log.
+- Exceptions are not swallowed (user, 2026-11-24): see "Failure recovery".
+For the expected failures above, the frame itself renders with today's path, so the worst case is today's cost plus at most a few
+wasted attempts.
+
+**Failure recovery (user, 2026-11-24).** Fall back to ordinary rendering only if GL state was restored successfully.
+- A refresh only ever writes the cache, never the real shadow targets (they are copied into only once the cache is `VALID`), so a
+  failed refresh cannot corrupt this frame's shadow map; the only risk is GL state.
+- Before the refresh, record the state it changes (framebuffer bindings, viewport, draw buffers, depth/blend/colour/cull state,
+  program) from `GlStateManager` and our own bindings. Restore it in `finally`, then compare against the record.
+- Restored and verified, no exception (an expected failure: not ready, incomplete framebuffer, signal not reached): cache `INVALID`,
+  continue the frame on today's path.
+- Any exception (from DH or our code): restore state in `finally`, set the cache `INVALID`, disable caching for the current pipeline,
+  log once with the full stack trace, then rethrow. No catch-and-continue: an exception inside DH's draw would most likely also
+  happen on today's path, and hiding it would hide real bugs.
+- Restore fails or does not verify: do not keep rendering on unknown state. Rethrow the original exception, with the restore failure
+  attached as a suppressed exception (or a new one if there was no original), so the crash report shows both.
 
 **Costs and risks.**
 - VRAM: one cached depth texture plus the cached colour attachments at the shadow resolution: about 64 MB per 32-bit target at 4096
