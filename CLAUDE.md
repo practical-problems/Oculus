@@ -9,7 +9,7 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
   DH integration (built on fangyu-mc's oculus-dh3-compat), and on dev the Emberlens optimizations.
 - Branches: `dh-3.3.3-mekanism` = stable (Spectacles 1.0.0), `dh-3.3.3-mekanism-dev` = dev (1.1.0-dev). Stable must stay an ancestor of
   dev: commit shared docs on stable and merge stable into dev (`-s ours` when dev must keep its own version of a file).
-- The user tests in game (Prism instance "Life in the village 3", backup world "Realta Nua 2", Java 24, RTX 5070 Ti laptop,
+- The user tests in game (Prism instance with a ~400-mod pack, a backup world, Java 24, RTX 5070 Ti laptop,
   Embeddium 0.3.18.1, render distance 4, DH 128 chunks) and builds with JDK 17 in IntelliJ.
 
 ## Rules (user decisions; always apply)
