@@ -52,6 +52,8 @@ stock ones. Correctness fixes (15) are always on and committed separately. No Em
 | 21 | Skip clearing custom images that only the shadow pass writes, on frames where it is skipped | part of `70d2cc4a9` | Only with 20. Broken in Emberlens: the regex is built with `"\b"` (a backspace in Java), so it never matches; use `"\\b"` | todo |
 | 22 | `PassTimers`: GPU time per composite pass via `GL_TIME_ELAPSED` queries, logged every 2000 frames, off by default | `c6528b012` | A debug tool for our own A/B tests | ported `d392ef5` as `PassTiming`: CPU + GPU per pass (timestamp queries), overlay and log |
 
+> Requirements for 20-21 (user, 2026-11-23): on skipped frames (interval > 1) the shadow matrix uniforms (`shadowModelView`, `shadowProjection` and their inverses) must be the exact matrices that were active when the regular shadow map AND `dh_shadow` last rendered (one saved set, captured in the same frame as both). Check how `DhShadowCullingFrustum` reads `ShadowRenderer.FRUSTUM` on skipped frames, so DH's shadow-section culling never runs against a stale or half-updated frustum, and make sure DH does not clear or partly redraw the LOD shadow map on a skipped frame (`MixinDHFramebufferClear` never clears it today; DH draws LOD shadows from inside Oculus's shadow pass, so skipping the pass should skip DH too: verify, including DH generic objects).
+
 ## Not porting
 
 | Change | Why |
