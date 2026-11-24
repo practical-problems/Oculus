@@ -178,9 +178,23 @@ framebuffer, viewport, draw buffers, depth test/func/mask, blend, colour mask, c
 **Experimental page.** Its own option, not part of "Enable safe optimizations"; risk Medium; applies live (no reload); "Reset"
 returns it to 1.
 
-**Measure first.** Before writing code: `PassTiming` overlay at a low sun, render distance 4, DH 128 chunks, Bliss DH shadowmap,
-same spot, comparing `SHADOW` and `DH_SHADOW` (split into opaque and water). Only worth building if opaque LOD shadows cost several
-times the copy. When built, time the copy as its own pass and compare 1% lows, not just averages.
+**Measure first, then predict (cost model: user, 2026-11-24).** Before writing code: `PassTiming` overlay at a low sun, render
+distance 4, DH 128 chunks, Bliss DH shadowmap, same spot, comparing `SHADOW` and `DH_SHADOW` (split into opaque and water), plus a
+one-off timing of the copy. That predicts the result for every N before anything is built:
+- Average saving per frame: `S = C_opaque * (1 - 1/N) - C_copy,net`. Today pays `C_opaque` every frame; the cache pays it once per
+  window plus the copy every frame. LOD water and near shadows cost the same either way, so they drop out.
+- `C_copy,net ≈ C_copy - C_clear + C_clear/N`: the copy replaces the clear of the real targets, but the cache is cleared on refresh
+  frames. Using plain `C_copy` is slightly pessimistic (the safe direction).
+- Refresh-frame penalty: `P ≈ C_copy,net`, how much slower a refresh frame is than today. `S` predicts average FPS, `P` the 1% lows.
+- Compute `S` separately for CPU and GPU (the overlay shows both). The copy is almost all GPU, so the CPU saving is close to
+  `C_opaque,cpu * (1 - 1/N)`. The frame only gets faster on the side that is the bottleneck.
+- Break-even: `S > 0` when `C_opaque > C_copy * N / (N - 1)`, i.e. 2x the copy at N=2, 1.5x at N=3, 1.33x at N=4.
+- Diminishing returns, e.g. `C_opaque = 3 ms`, `C_copy = 0.3 ms`: N=2 1.2 ms, N=3 1.7 ms, N=4 1.95 ms, N=8 2.3 ms. Going past 4 adds
+  little while the lag keeps growing, which is why N stops at 4.
+
+Build it only if the predicted `S` is worth having at the user's settings. Once built, time the copy as its own pass and check
+the A/B results against the formula, comparing 1% lows, not just averages. Optional: while the option is at 1, the timing overlay
+shows the predicted `S` and `P` live from the measured values, so a player can see whether turning it on would help at that spot.
 
 **Tests.**
 1. Correctness first: `/gamerule doDaylightCycle false`, player standing still. Nothing changes between refreshes, so N=1 and N=4
