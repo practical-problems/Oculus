@@ -186,7 +186,8 @@ the vertex code that mod also hooks); CPU and GPU timing measured separately, in
 - `pipeline/PassTiming`: GL timestamp queries (nestable) + nanoTime per pass, ring of 4 frames, results read only when available;
   overlay via Forge `RenderGuiEvent.Post` (hidden with F3), log every 10/30/60 s. Hooks in NewWorldRenderingPipeline phases and
   MixinDHShadowPassGuard (DH LODs / dh_shadow, nested). Nothing runs while overlay and log are off.
-- Batch 2 (next): vertex writing (16-18), shadow update interval (20, with 21). Item 14 skipped (no effect in our shadow pass),
+- Batch 2 (next): vertex writing (16-18), shadow update interval (20, with 21). Shadow interval requirements (user, 2026-11-23): on skipped frames (interval > 1) the shadow matrix uniforms (`shadowModelView`, `shadowProjection` and their inverses) must be the exact matrices that were active when the regular shadow map AND `dh_shadow` last rendered (one saved set, captured in the same frame as both). Check how `DhShadowCullingFrustum` reads `ShadowRenderer.FRUSTUM` on skipped frames, so DH's shadow-section culling never runs against a stale or half-updated frustum, and make sure DH does not clear or partly redraw the LOD shadow map on a skipped frame (`MixinDHFramebufferClear` never clears it today; DH draws LOD shadows from inside Oculus's shadow pass, so skipping the pass should skip DH too: verify, including DH generic objects).
+  Item 14 skipped (no effect in our shadow pass),
   19 needs MixinExtras. The sandbox cannot compile (no Minecraft/Forge jars, Maven blocked): javac on the changed files showed only
   missing-Minecraft errors; the user's Gradle build is the real check.
 
