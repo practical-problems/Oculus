@@ -28,6 +28,37 @@ Candidates, roughly from least to most work:
 4. **Compute shaders for GPU offloading**: candidates are clearing or copying render targets, depth copies (`copyPreTranslucentDepth`
    and friends), or culling. Each needs a clear measured win over the current GL calls.
 
+More candidates (2026-11-23 brainstorm), grouped by what they save:
+
+*Pack load and switch time*
+5. **Program binary cache** (`glGetProgramBinary` / `glProgramBinary`, GL 4.1): save each linked pack program to disk, keyed by
+   driver version + shader source hash, and load it next time instead of compiling. Pairs with parallel compile (first load) for
+   near-instant later loads. Drivers may reject old binaries after an update: fall back to compiling.
+
+*CPU cost per program switch / draw*
+6. **Multi-bind textures** (`glBindTextures`, GL 4.4): bind all of a program's samplers in one call instead of one
+   active-texture + bind per unit. Note: the tree already has an `IrisRenderSystem.bindTextures` using it, but it is commented
+   out; find out why before reviving it.
+7. **Uniform buffer for shared per-frame uniforms** (UBO): matrices, camera, time and so on are uploaded to every program
+   separately today. One buffer written once per frame and bound for all programs could remove many `glUniform*` calls.
+   Needs the shader transformer to move plain `uniform` declarations into a block, and GLSL 1.40+, so it can only apply to packs
+   whose version allows it. Big change; measure uniform upload cost first.
+8. **Framebuffer invalidation** (`glInvalidateFramebuffer`, GL 4.3): tell the driver which render targets don't need their old
+   contents. Small, low risk; the gain on desktop GPUs is probably small.
+
+*Letting the GPU skip work*
+9. **Occlusion queries + conditional rendering** (GL 3.0/3.3): draw a block entity's or entity's bounding box as a query and let
+   the GPU skip the real draw if it was hidden, without the CPU waiting for the answer. Useful in bases full of chests and machines.
+10. **GPU-driven culling**: compute shader culls instances and writes indirect draw commands, drawn with
+    `glMultiDrawElementsIndirectCount` (GL 4.6) so the GPU also decides how many draws there are. The largest idea here; only
+    for entity/block-entity batching (terrain is Embeddium's, LODs are DH's).
+
+Already present, so not new: `glCopyImageSubData` for depth copies (`DepthCopyStrategy.Gl43CopyImage`, picked automatically when
+available), `glClearTexImage` for custom images, `glBindSamplers` multi-bind (and its fast path on the Experimental page).
+
+Not useful here: SPIR-V shaders (packs are GLSL source), bindless textures (vendor extension, every pack shader would change),
+separate shader objects (little to gain).
+
 Constraints:
 - Without ThreatenGL (or on drivers that only give 3.2 core) everything must fall back to today's path. macOS stops at GL 4.1.
 - Only NVIDIA on Windows is available for testing; AMD and Intel drivers behave differently with persistent mapping and
