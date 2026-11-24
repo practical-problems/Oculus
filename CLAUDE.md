@@ -207,8 +207,9 @@ the vertex code that mod also hooks); CPU and GPU timing measured separately, in
   no com.seibel imports outside compat/dh; mods.toml has no DH dependency.
 - Shader toggles: destroy() frees LOD/generic programs, VAO and depth copy; DH framebuffers are owned by RenderTargets.
 - Minimize: copyOpaqueDepth skips zero-size windows.
-- Not tested in game by the user's decision: the End (same path as the Nether), launch without DH, shaders-off null check,
-  minimize/restore, multiplayer. Nether with DH generating can flood the log with YUNG's "broken basalt columns" warnings (not ours).
+- The End tested 2026-11-23 with the stable Spectacles build (`spectacles-mc1.19.2-1.0.0-20261123-1852`, Photon): pipeline
+  rebuilt for the_end, DH integration re-enabled, no errors (log also shows a rejoin rebuild "overworld => overworld").
+- Not tested in game by the user's decision: launch without DH, shaders-off null check, minimize/restore, multiplayer. Nether with DH generating can flood the log with YUNG's "broken basalt columns" warnings (not ours).
 
 ## References (clone read-only)
 - `Asek3/Oculus` branch **`1.20.1-new`** (mod 1.8.0, 2025-05): the real 1.8.0 source. Primary blueprint for the DH 3.x integration.
