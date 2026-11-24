@@ -35,8 +35,9 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
   or edit releases).
 - Dev: Experimental page (13 Emberlens toggles, CPU/GPU pass timing, `RenderTargets` depth fix) builds but is **untested in game**.
 - Next: (1) user tests the Experimental page; (2) integrate Oculus Flywheel Compat as `compat/flywheel` and fix its shader-toggle
-  crash; (3) batch 2: vertex writing (16-18) and LOD shadow update interval (20, redesigned 2026-11-24 as an
-  LOD-only shadow cache; 21 folded in; measure `DH_SHADOW` first). Plans and requirements: `BACKPORT_CANDIDATES.md`.
+  crash; (3) batch 2: vertex writing (16-18). Plans and requirements:
+  `BACKPORT_CANDIDATES.md`. Item 20 (LOD shadow cache) was dropped 2026-11-24 (few packs use LOD shadows, minimal gains);
+  its design is kept in `doc/LOD_Shadow_Cache_Idea.md`.
 - Lowest priority: tessellation shaders (feature flag `TESSELLATION_SHADERS`). Unplanned ideas: `IDEAS.md` (dev only).
 
 ## Build and CI
@@ -83,5 +84,5 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
 
 ## Pointers
 `README.md` (users, pack table, credits) · `TEST_RESULTS.md` (all measurements) · `BACKPORT_CANDIDATES.md` (Emberlens list, Flywheel
-plan, batch 2 requirements) · `IDEAS.md` (dev) · `claudeOld/`: `CLAUDE-20261123-2157-QUICK.md` (fast catch-up on the history), `-RESULT.md` (its test results),
+plan, batch 2 requirements) · `doc/LOD_Shadow_Cache_Idea.md` (dropped item 20) · `IDEAS.md` (dev) · `claudeOld/`: `CLAUDE-20261123-2157-QUICK.md` (fast catch-up on the history), `-RESULT.md` (its test results),
 and the full snapshot.
