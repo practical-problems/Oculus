@@ -96,7 +96,10 @@ Packs tested on this branch: Complementary/Euphoria (no dh_shadow by design), Ph
   rendered LODs during the shadow pass (also halving FPS). Fix: skip DH render calls while `ShadowRenderingState.areShadowsCurrentlyBeingRendered()`.
   Now done by `MixinDHShadowPassGuard`. Side effect: LODs cast no shadows until `dh_shadow` exists.
 - **Flamethrower crash:** see commit 4.
-- **GitHub Actions:** the inherited workflows used the removed Brachyura build and deprecated actions; deleted.
+- **GitHub Actions:** the inherited workflows used the removed Brachyura build and deprecated actions; deleted. New
+  `.github/workflows/build.yml` (2026-11-23): JDK 17, downloads DH 3.3.3 from Modrinth into `libs/` and checks its SHA-512
+  (compile-only, never committed), `./gradlew build`, uploads `build/libs/*.jar` as an artifact on pushes to the stable and dev
+  branches; a `v*` tag also creates a draft release with the jar. CI jars have no local timestamp suffix.
 - **JDK:** builds need JDK 17; JDK 21+ fails in repackaged commons-collections. Set `org.gradle.java.home` in the user-level
   `~/.gradle/gradle.properties` (not the repo) so every terminal uses 17.
 
