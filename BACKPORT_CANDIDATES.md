@@ -89,14 +89,13 @@ Notes (user ideas + source check, 2026-11-23):
   in `PipelineManager` when the block ID map changed, so a toggle does not reliably reach Flywheel. Verify that Create rebuilds its
   cached contraption models on that reload, not only Flywheel instances. Optional safety net: a buffer remembers its build format and
   is skipped (not read) on a mismatch, so a missed case drops a frame instead of crashing.
-- Toggle (user question, 2026-11-23): their mixins are 17 `@Inject`, 2 `@Redirect`, 2 `@ModifyVariable` plus accessors/invokers,
-  no `@Overwrite`, so every hook can check one static flag (inject returns early, redirect calls the original, modify-variable passes
-  the value through). The main switch is `IrisHandlerMixin`, which forces Flywheel's `ShadersModHandler.isShaderPackInUse()` to
-  false; off = return the real value, so Flywheel falls back to its own no-instancing path under shaders. Plan: a live setting
-  "Flywheel shader support" (default on; applied through the same Flywheel reload as the crash fix, brief hitch, no restart), a
-  startup "hard off" in the config file that makes the mixin plugin skip the mixins (restart; for conflict troubleshooting), and
-  automatic off when `irisflw` is installed. Put it in a "Compatibility" group on the Experimental page, apart from the
-  optimizations.
+- No player-facing toggle (user decision, 2026-11-23): when on, the hooks cost nothing measurable (the standalone mod showed no
+  cost with shaders off: 227-258 FPS vs 246 baseline), and turning it off only loses Flywheel instancing under shaders (Photon near
+  Create 90-110 -> 67-81 FPS). It is simply on whenever Flywheel is present and `irisflw` is not. For dev testing only: a startup
+  kill switch (config-file key or JVM property, e.g. `-Dspectacles.flywheel=false`) that makes the mixin plugin skip the mixins, to
+  A/B against the standalone mod or rule it out in a crash; needs a restart, not shown in any GUI. (Their mixins are 17 `@Inject`,
+  2 `@Redirect`, 2 `@ModifyVariable`, no `@Overwrite`, so a live flag would also be possible if ever needed; the main switch would
+  be `IrisHandlerMixin`, which forces Flywheel's `ShadersModHandler.isShaderPackInUse()` to false.)
 
 ## Iris 1.7 / Oculus 1.8.0 features (port only when a pack needs one; lowest priority)
 
