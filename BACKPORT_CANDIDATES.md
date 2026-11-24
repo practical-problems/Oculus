@@ -15,6 +15,25 @@ Ported optimizations are toggles on the Experimental page (shader pack screen > 
 default and stored globally in `config/oculus-experimental.properties`; with all of them off the code paths are the
 stock ones. Correctness fixes (15) are always on and committed separately. No Emberbium dependency.
 
+**Method shape rule (2026-11-24).** "All off = baseline" also has to hold for other mods' mixins, which match the bytecode
+shape of a method, not its behaviour. So a port must not change, even with its option off: the local variables in scope at
+existing instructions (captured-locals injectors), or the number and order of calls/field accesses/`new` of targets the method
+already uses (injection points by ordinal). New code paths go into helper methods with new names; the original method only
+gains the flag check and a call to the helper (and possibly an early `return`, which is still a real return). Fixed for batch 1
+in `d392ef5` -> `d9d1ee6` (dev): `NormalHelper` (item 9) had moved `bitcoeff` into the `if`, changing the local variable table
+(javap on stub builds before/after: original and fixed tables identical, 47 and 50 locals); items 4, 5 and 6-7 had their fast paths
+inlined next to calls the methods already make. Remaining always-on shape changes, judged harmless (vendored or internal code nobody
+hooks; behaviour identical when off): `ExpressionResolver` named variables are a `NamedVariable` class instead of two anonymous
+classes (item 10), `IrisTimeUniforms` lambdas read the time through a helper (item 11), sampler/coherent-memory tracking fields in
+`IrisRenderSystem` (items 1-2). Oculus Flywheel Compat's hooks into Oculus (checked 2026-11-24 on leon-o/iris-flw-compat `1.19.2`:
+`ProgramSamplers.builder` argument, `NewWorldRenderingPipeline.<init>` TAIL, invokers, an `ExtendedShader` accessor,
+`ShadowRenderer.renderShadows` HEAD and TAIL) do not touch any batch 1 change.
+
+Item 9 numeric note: the result can differ from today only on degenerate triangles (UV area close to zero), where the unnormalized
+dot can underflow to -0 (read as "not negative") or the normalized one can overflow to 0, flipping the tangent sign. The tangent
+itself is meaningless there, so no visible effect. No vertex format stores a bitangent (shaders rebuild it from normal, tangent and
+the sign), and all callers, including other mods' writers, only see the packed return value.
+
 ## Small, low risk (CPU per draw; helps every pack)
 
 | # | Change | Emberlens commit | Our file(s) | Status |
@@ -27,7 +46,7 @@ stock ones. Correctness fixes (15) are always on and committed separately. No Em
 | 6 | Entity buffer LRU: `Object2IntLinkedOpenHashMap` (`getAndMoveToLast`) instead of `LinkedHashMap<RenderType,Integer>` | part of `70d2cc4a9` | `batchedentityrendering/impl/FullyBufferedMultiBufferSource.java` | ported `d392ef5` (toggle) |
 | 7 | Entity render ordering: don't reallocate empty graphs every frame; skip empty graphs in `getRenderOrder` | `24911620d` | `batchedentityrendering/impl/ordering/GraphTranslucencyRenderOrderManager.java` | ported `d392ef5` (toggle) |
 | 8 | `MapDigraph` vertex map: `Object2ObjectLinkedOpenHashMap` instead of `LinkedHashMap` | `56b51f4e0` | `de/odysseus/ithaka/digraph/MapDigraph.java` | ported `d392ef5` (toggle) |
-| 9 | Drop the bitangent normalisation in tangent generation (only its sign is used; Emberlens ships a check) | `c85881622` | `iris/vertices/NormalHelper.java` | ported `d392ef5` (toggle) |
+| 9 | Drop the bitangent normalisation in tangent generation (only its sign is used; Emberlens ships a check) | `c85881622` | `iris/vertices/NormalHelper.java` | ported `d392ef5` (toggle); method shape restored `d9d1ee6` (see below) |
 | 10 | Custom-uniform expressions: a named variable caches its lookup per context instead of resolving the name on every evaluation | part of `70d2cc4a9` | `kroppeb/stareval/resolver/ExpressionResolver.java` | ported `d392ef5` (toggle) |
 | 11 | Date/time uniforms read the clock lazily (once per tick, only if a pack uses them) | part of `70d2cc4a9` | `iris/uniforms/IrisTimeUniforms.java` | ported `d392ef5` (toggle) |
 | 12 | `PipelineManager.getPipeline()` returns a cached `Optional` instead of allocating one per call | part of `70d2cc4a9` | `iris/pipeline/PipelineManager.java` | ported `d392ef5` (toggle) |
@@ -224,6 +243,9 @@ cache framebuffer the same way `DhFrameBufferWrapper` binds the shadow framebuff
 framebuffer, viewport, draw buffers, depth test/func/mask, blend, colour mask, cull, polygon offset, scissor. Go through
 `RenderSystem`/`GlStateManager`: raw GL calls desync Minecraft's cached state and cause bugs frames later. The copy
 (`glCopyImageSubData`) changes no binding state.
+
+**Oculus Flywheel Compat.** It injects at `ShadowRenderer.renderShadows` HEAD and TAIL. Keep both reachable on every path
+(no early return before TAIL for the cache paths), and keep its Flywheel shadow drawing inside the near pass, drawn every frame.
 
 **Transactional refresh (user, 2026-11-24).** A refresh that fails or is interrupted must never leave partial shadow data that later
 frames reuse.
