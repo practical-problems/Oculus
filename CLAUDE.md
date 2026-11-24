@@ -13,6 +13,7 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
   Embeddium 0.3.18.1, render distance 4, DH 128 chunks) and builds with JDK 17 in IntelliJ.
 
 ## Rules (user decisions; always apply)
+- **CRITICAL: at the end of every long session**, copy `CLAUDE.md` to `claudeOld/CLAUDE-YYYYMMDD-HHMM.md` (user's local time), write `CLAUDE-YYYYMMDD-HHMM-QUICK.md` (critical info only, linking to the RESULT file) and `CLAUDE-YYYYMMDD-HHMM-RESULT.md` (that session's test results), then trim the live `CLAUDE.md` back to current rules, state and pointers. Dev branch only.
 - Stable moves forward only after the user has tested. Docs-only changes may go to both branches.
 - Commit messages end with the session's attribution lines. Don't commit DH jars or other people's binaries. Oculus is LGPL-3.0.
 - Keep for compatibility: mod ID `oculus` (`Iris.MODID`, config file names), packages `net.coderbot.iris`, mixin config names,
