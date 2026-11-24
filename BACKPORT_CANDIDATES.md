@@ -79,6 +79,17 @@ Agreed plan (user, 2026-11-23):
    when shaders switch) instead of choosing the 52-byte reader/writer live from `isShaderPackInUse()`.
 5. Only then start the vertex-writing ports (16-18), with both sides of the vertex code in one codebase.
 
+Notes (user ideas + source check, 2026-11-23):
+- Take only the `irisflw` classes. On their 1.19.2 branch `1.0.3` bundled Flywheel via Loom `include(...)`; commit `28ec825`
+  ("Will not include the flywheel in jar", the `1.0.3b` bump) removed it, so the source is compile-only against
+  `flywheel-forge 0.6.10-20` (the version CI should fetch). Their main-branch changelog about bundling is `1.1.3` for newer MC.
+- Fix the toggle crash with a rebuild, not dual 32/52-byte readers: after the new pipeline is active (creation and destruction),
+  trigger Flywheel's backend/instance reload and clear their compiled-program cache (their own TODO in
+  `MixinProgramCompiler.invalidate`: "remove cache when shader pack reloaded"). Today Oculus only calls `levelRenderer.allChanged()`
+  in `PipelineManager` when the block ID map changed, so a toggle does not reliably reach Flywheel. Verify that Create rebuilds its
+  cached contraption models on that reload, not only Flywheel instances. Optional safety net: a buffer remembers its build format and
+  is skipped (not read) on a mismatch, so a missed case drops a frame instead of crashing.
+
 ## Iris 1.7 / Oculus 1.8.0 features (port only when a pack needs one; lowest priority)
 
 | # | Feature | Notes | Status |
