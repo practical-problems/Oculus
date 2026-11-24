@@ -127,6 +127,11 @@ places with the LODs, and only if DH draws after it in that call. So:
   catches mods that bypass `GlStateManager`). A mismatch counts as unsupported pack behaviour (cache off, logged).
 - First, check DH's injection point: if DH draws opaque LODs at the start of the solid-layer call, nothing changes order at all and
   only the LOD draw's own state matters.
+- Known limitation (user, 2026-11-24): the per-refresh check reads `GlStateManager`'s cached state, and the real `glGet*` check runs
+  once per pipeline, so a mod that starts bypassing `GlStateManager` later (after that check) goes undetected. Querying real GL
+  state continuously would undermine the optimization (each `glGet*` stalls on the driver thread with threaded drivers), so this is
+  accepted. Symptoms would be wrong colours in distant shadows that differ between N=1 and N>1; the per-pack opt-out list is the
+  workaround. Optional middle ground if it ever matters: repeat the real check rarely (e.g. every ~10 s), one stall per interval.
 
 **Matrix snapshot, frozen in world space.** The shadow modelview is camera-relative: `ShadowMatrices.createModelViewMatrix` is the
 sun rotation plus `snapModelViewToGrid`, an offset from the camera position within the `shadowIntervalSize` grid, and vertices in the
