@@ -3,6 +3,8 @@
 </p>
 
 # Spectacles
+*An Oculus fork that got Distant Horizons 3.3.3 working on Forge 1.19.2 and got slightly carried away.*
+
 Spectacles is an unofficial fork of [Oculus](https://github.com/Asek3/Oculus) (the Forge port of ["Iris"](https://www.curseforge.com/minecraft/mc-mods/irisshaders))
 for Forge 1.19.2, focused on Distant Horizons. It was called Oculus until 2026-11-23; please don't report its issues to Oculus or Iris.
 
