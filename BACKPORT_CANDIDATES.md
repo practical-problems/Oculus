@@ -44,6 +44,8 @@ stock ones. Correctness fixes (15) are always on and committed separately. No Em
 | 18 | `BufferBuilderPolygonView` reads through raw addresses | `44ebaaff9` | `iris/vertices/BufferBuilderPolygonView.java` | Small; fits with 16 | todo |
 | 19 | Chunk meshing hooks: `@ModifyExpressionValue`/`@Local` instead of `@Inject` + `LocalCapture` (no callback object per block) | `c386e5ea5` | `iris/compat/sodium/mixin/block_id/MixinChunkRenderRebuildTask.java` | Needs MixinExtras, which this tree does not bundle (would need jar-in-jar). Our 1.19.2 Embeddium meshing code also differs | todo |
 
+> Requirements for 16-18 (user, 2026-11-23): Oculus Flywheel Compat writes and reads its own unsafe 52-byte vertex format (`ExtendedBlockWriterUnsafe`, `IrisBlockVertexListUnsafe`) while shaders are on. `ExtendedVertexLayout` (16) and the 56-byte fast entity vertex path (17) must only engage when the BufferBuilder's current `VertexFormat` is exactly the Iris format they were built for (identity check, plus stride and element layout), fall back to the stock path for anything else, and never touch buffers or formats Flywheel owns. Test them together with Flywheel Compat near Create contraptions (moving and static, shaders on), with the options on and off, and watch for vertex corruption or an EXCEPTION_ACCESS_VIOLATION like the known shader-toggle crash.
+
 ## Optional features
 
 | # | Change | Emberlens commit | Notes | Status |
