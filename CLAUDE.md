@@ -28,8 +28,9 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
 - GitHub: branch pushes work from the sandbox; tag pushes are refused (403), so the user pushes tags. Leave branch housekeeping alone.
 
 ## Current state and next steps
-- Stable: Spectacles 1.0.0 tested in game (all packs below, Overworld/Nether/End). Release: the user pushes tag `v1.0.0` on commit
-  `1a52897`; CI then drafts the release with the jar; paste the notes and publish.
+- Stable: **Spectacles 1.0.0 released 2026-11-23** (GitHub release `v1.0.0`, tag on `1a52897`, jar built by CI). Release flow:
+  the user pushes the tag, CI drafts the release with the jar, the user pastes the notes and publishes (the sandbox cannot push tags
+  or edit releases).
 - Dev: Experimental page (13 Emberlens toggles, CPU/GPU pass timing, `RenderTargets` depth fix) builds but is **untested in game**.
 - Next: (1) user tests the Experimental page; (2) integrate Oculus Flywheel Compat as `compat/flywheel` and fix its shader-toggle
   crash; (3) batch 2: vertex writing (16-18) and shadow update interval (20-21). Plans and requirements: `BACKPORT_CANDIDATES.md`.
