@@ -1,7 +1,7 @@
 # Backport candidates (non-DH)
 
 Changes from other Oculus forks that could be ported to this tree. Only changes that work with stock
-Embeddium/Rubidium are listed. Items 1-13, 15 and 22 are ported (batch 1, 2026-11-23, untested in game); 16-18, 20 and 21 are next.
+Embeddium/Rubidium are listed. Items 1-13, 15 and 22 are ported (batch 1, 2026-11-23, untested in game); 16-18 and 20 are next (21 folded into 20, 2026-11-24).
 
 Source so far: [Emberlens](https://github.com/shuttheirprayer/Emberlens) (1.20.1 fork of Oculus 1.8.x,
 LGPL-3.0 like this repo; port with credit). Read 2026-11-23 at `44ebaaff9`. Each entry was checked
@@ -50,11 +50,81 @@ stock ones. Correctness fixes (15) are always on and committed separately. No Em
 
 | # | Change | Emberlens commit | Notes | Status |
 |---|---|---|---|---|
-| 20 | Shadow update interval option (1-4): redraw the shadow map every N frames; shadow matrix uniforms use the matrices the map was drawn with; clears skipped with it | `d3a976c4c`, `4215cefa8`, `022f07372`, `027d65610`, `82d486e6e` | Trades shadow lag for FPS. Must also skip the DH LOD shadow pass on the same frames and keep `DhShadowCullingFrustum` consistent | todo |
-| 21 | Skip clearing custom images that only the shadow pass writes, on frames where it is skipped | part of `70d2cc4a9` | Only with 20. Broken in Emberlens: the regex is built with `"\b"` (a backspace in Java), so it never matches; use `"\\b"` | todo |
+| 20 | **LOD shadow update interval (1-4 frames)**: only the DH LOD shadows are redrawn every N frames, into a private cache that is merged into the shadow map every frame; near terrain, entities and block entities are still drawn every frame. Replaces Emberlens's whole-map skip (user idea, 2026-11-24). Design below | idea from `d3a976c4c`, `4215cefa8`, `022f07372`, `027d65610`, `82d486e6e` (their saved-matrix part is the reference; the whole-map skip is not ported) | Trades distant shadow lag (hard to see) for `DH_SHADOW` time. Measure first | todo (design 2026-11-24) |
+| 21 | Skip clearing custom images that only the shadow pass writes, on frames where it is skipped | part of `70d2cc4a9` | Folded into 20: with the LOD cache the shadow pass still runs every frame, so its clears stay. If ever revived: Emberlens builds the regex with `"\b"` (a backspace in Java), so it never matches; use `"\\b"` | skip (folded into 20, 2026-11-24) |
 | 22 | `PassTimers`: GPU time per composite pass via `GL_TIME_ELAPSED` queries, logged every 2000 frames, off by default | `c6528b012` | A debug tool for our own A/B tests | ported `d392ef5` as `PassTiming`: CPU + GPU per pass (timestamp queries), overlay and log |
 
-> Requirements for 20-21 (user, 2026-11-23): on skipped frames (interval > 1) the shadow matrix uniforms (`shadowModelView`, `shadowProjection` and their inverses) must be the exact matrices that were active when the regular shadow map AND `dh_shadow` last rendered (one saved set, captured in the same frame as both). Check how `DhShadowCullingFrustum` reads `ShadowRenderer.FRUSTUM` on skipped frames, so DH's shadow-section culling never runs against a stale or half-updated frustum, and make sure DH does not clear or partly redraw the LOD shadow map on a skipped frame (`MixinDHFramebufferClear` never clears it today; DH draws LOD shadows from inside Oculus's shadow pass, so skipping the pass should skip DH too: verify, including DH generic objects).
+### Design for item 20: LOD shadow cache (user idea + discussion, 2026-11-24)
+
+Idea (user): apply the interval only to the distant LOD shadows. Near shadows stay live (mobs, contraptions, placed blocks), so
+the lag is in the part of the map where it is hardest to spot. Emberlens's version skips the whole shadow map, which is easy to see
+on nearby shadows.
+
+**Why a private cache, not a pack-visible texture.** Packs only sample `shadowtex0/1` and `shadowcolor0/1`. `dh_shadow` draws into
+the same shadow framebuffer as near terrain (`NewWorldRenderingPipeline.createDHShadowFramebuffer`); there is no `dhShadowTex` a pack
+would read. So the cached LOD shadows must be merged back into the real shadow map every frame.
+
+**Per frame.**
+1. Refresh frame (every N frames, or forced, see below): draw only the LODs with `dh_shadow` into cache targets, and save the
+   matrices and frustum used. Cache contents: depth after LOD opaque (feeds `shadowtex1`), depth after LOD water (feeds
+   `shadowtex0`), and `shadowcolor0/1` only if the pack's `dh_shadow` writes them.
+2. Every frame, in the shadow pass:
+   - instead of clearing the shadow targets, copy the LOD-opaque cache (depth + colour) into them (`Gl43CopyImage` /
+     `glCopyImageSubData`; fall back to a blit or a depth-writing fullscreen pass if formats differ);
+   - draw near opaque geometry as usual, with the saved matrices; the depth test merges it with the cached LODs;
+   - `copyPreTranslucentDepth` as usual, so `shadowtex1` = LOD opaque + near opaque;
+   - merge the cached LOD water into `shadowtex0`/`shadowcolor` with a small fullscreen pass (writes `gl_FragDepth` and colour from
+     the cache, depth test on). A plain copy would overwrite near geometry;
+   - near translucents as usual; `shadowcomp` passes then run on the merged map, every frame.
+3. Open question to check in DH 3.3.3: DH draws LOD shadows from inside Minecraft's `renderChunkLayer` during the shadow pass,
+   interleaved with near terrain (solid layer via `renderLods`, water via `renderDeferredLodsForShaders`). The refresh needs an
+   LOD-only draw into the cache: e.g. call DH's render at the start of the shadow pass before any near layer, with the
+   `DhFrameBufferWrapper` returning a cache framebuffer, and cancel DH's normal calls in that pass (`MixinDHShadowPassGuard`). Find
+   which of these works without DH redrawing or clearing something else.
+
+**Matrix freeze (replaces the 2026-11-23 requirement, same rule, narrower).** The shadow matrix changes every frame (the sun angle
+moves with partial ticks; the origin follows the camera in `shadowIntervalSize` steps), so "refresh the cache when the matrix
+changes" would mean every frame. Instead, for the whole N-frame window, every user of the shadow matrix uses the one set saved on the
+refresh frame: the near pass, `ShadowRenderer.FRUSTUM`, the uniforms (`shadowModelView`, `shadowProjection` and inverses) in every
+program, and the LOD cache. The sun moves about 0.3 degrees per second (about 0.04 degrees over 4 frames at 30 FPS) and the origin lags a
+few blocks at most, so near shadows drawn with a matrix up to N frames old look the same. The original 2026-11-23 requirement (user):
+one saved matrix set, captured in the same frame as both the regular map and `dh_shadow`, and DH's culling never against a stale or
+half-updated frustum.
+
+**`DhShadowCullingFrustum`.** On refresh frames DH culls against the frozen frustum, which is also the near pass's frustum, so the two
+cannot drift. On other frames DH draws no shadows at all (cancelled in `MixinDHShadowPassGuard`). Verify that DH generic objects are
+also not drawn into the shadow map (they are cancelled in the LOD shadow pass today) and that DH never clears the shadow framebuffer
+(`MixinDHFramebufferClear` never clears it today).
+
+**Interval.** Counted in frames, 1-4 (1 = off: today's code path, untouched). Frames rather than milliseconds because the saving is per
+frame (N=4 always means 75% less `DH_SHADOW` work), a ms window would give no saving at low FPS where it matters most, and a fixed
+every-Nth-frame rhythm feels steadier than refreshes landing on irregular frames. Internal safety cap: refresh anyway if the cache is
+older than about 250 ms (hitches, GC pauses, alt-tab, very low FPS). Not a user setting.
+
+**Forced refresh (next frame redraws the cache).** Shadow light switches between sun and moon (direction flips); pipeline rebuild or
+dimension change; teleport or a camera jump larger than a few blocks; a jump in the sun angle (`/time set`, more than about 1 degree);
+shadow distance, shadow resolution, DH render distance or render distance changed; window resize if it reallocates shadow targets.
+LOD changes (new LODs loading) wait for the next refresh; the age cap bounds that.
+
+**Pack checks.** Off (silently every frame, logged once) when the pack has no active `dh_shadow`, or its `dh_shadow` source uses
+`imageStore` / writes custom images (those writes would be lost on skipped frames). Animated LOD water shadows (caustics using
+`frameTimeCounter`) freeze for N frames: acceptable at that distance.
+
+**Costs and risks.**
+- VRAM: two cached depth textures plus up to two colour textures at the shadow resolution: about 128-256 MB at 4096. Allocate only
+  while the option is above 1; free on pipeline destroy. Say so in the tooltip.
+- Per-frame copy + water merge: expected well under 1 ms; measure with `PassTiming` (add a pass for it).
+- Frame pacing: every Nth frame pays the full LOD shadow cost, the others are cheap. Average FPS rises, 1% lows may not; can feel like
+  a faint regular stutter. v2 idea, not in the first version: spread the refresh over the N frames by using `DhShadowCullingFrustum`
+  to draw 1/N of the LOD sections per frame into a second (double-buffered) cache, swapping when complete (adds N frames of lag).
+
+**Experimental page.** Its own option, not part of "Enable safe optimizations"; risk Medium; applies live (no reload); "Reset"
+returns it to 1.
+
+**Measure first.** Before writing code: `PassTiming` overlay at a low sun, render distance 4, DH 128 chunks, Bliss DH shadowmap,
+same spot, comparing `SHADOW` and `DH_SHADOW`. Only worth building if `DH_SHADOW` clearly dominates. Then A/B N=1..4: `DH_SHADOW` and
+frame time (average and 1% lows), plus visual checks: fly ~25 blocks up so the ground below is LODs, look for a seam between near
+and LOD shadows, move fast (elytra), sunrise/sunset switch, `/time set`, teleport, pack switch.
 
 ## Not porting
 

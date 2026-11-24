@@ -33,7 +33,8 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
   or edit releases).
 - Dev: Experimental page (13 Emberlens toggles, CPU/GPU pass timing, `RenderTargets` depth fix) builds but is **untested in game**.
 - Next: (1) user tests the Experimental page; (2) integrate Oculus Flywheel Compat as `compat/flywheel` and fix its shader-toggle
-  crash; (3) batch 2: vertex writing (16-18) and shadow update interval (20-21). Plans and requirements: `BACKPORT_CANDIDATES.md`.
+  crash; (3) batch 2: vertex writing (16-18) and LOD shadow update interval (20, redesigned 2026-11-24 as an
+  LOD-only shadow cache; 21 folded in; measure `DH_SHADOW` first). Plans and requirements: `BACKPORT_CANDIDATES.md`.
 - Lowest priority: tessellation shaders (feature flag `TESSELLATION_SHADERS`). Unplanned ideas: `IDEAS.md` (dev only).
 
 ## Build and CI
