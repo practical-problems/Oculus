@@ -59,6 +59,20 @@ available), `glClearTexImage` for custom images, `glBindSamplers` multi-bind (an
 Not useful here: SPIR-V shaders (packs are GLSL source), bindless textures (vendor extension, every pack shader would change),
 separate shader objects (little to gain).
 
+### Notes: parallel compile + program binary cache (user, 2026-11-23)
+Candidates 1 and 5 work as one feature:
+- **First load:** with `GL_KHR_parallel_shader_compile` / `GL_ARB_parallel_shader_compile`, submit compile and link for all of a
+  pack's programs first, so the driver's worker threads run them side by side, and only then check `GL_LINK_STATUS` (checking early
+  makes the driver wait).
+- **Later loads:** once a program links cleanly, save its blob with `glGetProgramBinary` (store the binary format with it). Key it by
+  a SHA-256 of the final GLSL sources actually sent to the driver (after preprocessing and our transformers), the active pack options
+  and macros, and `GL_RENDERER` + `GL_VERSION`. Next time, `glProgramBinary` skips compiling entirely. If `GL_LINK_STATUS` is
+  `GL_FALSE` afterwards (driver update, changed GPU), delete the entry and compile normally.
+- Some drivers may need `GL_PROGRAM_BINARY_RETRIEVABLE_HINT` set before linking to give a binary back.
+- **Driver caches:** NVIDIA already keeps its own shader disk cache, so the gain there may be small; Mesa/AMD, and modded Java
+  launches, often bypass or evict theirs when pack macros change. Measure cold launch vs. warm reload pack-load times in the log
+  to see what our cache adds on top of the driver's.
+
 Constraints:
 - Without ThreatenGL (or on drivers that only give 3.2 core) everything must fall back to today's path. macOS stops at GL 4.1.
 - Only NVIDIA on Windows is available for testing; AMD and Intel drivers behave differently with persistent mapping and
