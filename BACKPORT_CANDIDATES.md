@@ -65,6 +65,20 @@ stock ones. Correctness fixes (15) are always on and committed separately. No Em
 | Flywheel/Create instancing (`685f2de7a`, `50e018b22`) | Flywheel 1.0 (Create 6) only exists on 1.20.1. On 1.19.2 the Oculus Flywheel Compat mod covers this |
 | `MixinBufferBuilder_SegmentRendering` `@Redirect` on `ensureVertexCapacity` (part of `70d2cc4a9`) | Unclear gain; a redirect conflicts more easily with other mods |
 
+## Planned: integrate Oculus Flywheel Compat (before batch 2's vertex work)
+
+Source: [leon-o/iris-flw-compat](https://github.com/leon-o/iris-flw-compat) branch `1.19.2` (MIT, "Copyright (c) 2022 Red Face";
+keep the notice and credit it). About 47 Java files / 2,700 lines; built against Oculus 1.6.9, i.e. our base, so its mixins into
+Oculus classes (`IrisRenderingPipeline`, `ProgramSet`, `ShadowRenderer`, `ProgramSamplers`, ...) become plain code in our classes.
+Agreed plan (user, 2026-11-23):
+1. Port as-is into an optional `compat/flywheel` module, loaded like the DH compat: a mixin plugin applies its mixins only when
+   `flywheel` is loaded and the standalone mod `irisflw` is not (conflict guard; log which one is active).
+2. Flywheel 0.6 (Create 0.5.1's) as compile-only, fetched by CI like DH; never committed.
+3. Parity test against the standalone mod: Photon near Create (standalone gave 67-81 -> 90-110 FPS), shadows, clean log.
+4. Fix the shader-toggle crash in our copy: buffers remember the vertex format they were built in (or Flywheel models are rebuilt
+   when shaders switch) instead of choosing the 52-byte reader/writer live from `isShaderPackInUse()`.
+5. Only then start the vertex-writing ports (16-18), with both sides of the vertex code in one codebase.
+
 ## Iris 1.7 / Oculus 1.8.0 features (port only when a pack needs one; lowest priority)
 
 | # | Feature | Notes | Status |
