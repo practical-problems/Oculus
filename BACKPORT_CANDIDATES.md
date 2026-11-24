@@ -91,6 +91,17 @@ frozen water caustics. Cost: LOD water shadows are drawn every frame (flat quads
    (`MixinDHShadowPassGuard`), while the water call still runs every frame. Find which of these works without DH redrawing or
    clearing something else.
 
+**Opaque draw order (user concern, 2026-11-24).** With the cache, opaque LODs are always "drawn" (copied) before near opaque
+geometry, which may not match the original interleaved order. For depth this does not matter: with depth testing, depth writes on and
+no blending, the final depth is the nearest fragment in any order (discards only remove fragments; polygon offset is applied per draw
+before the test). Where order does matter:
+- Depth ties: the tie winner depends on order, but the depth written is identical; only the `shadowcolor` value can differ, and only
+  where an LOD and a near block hit exactly the same depth in the same texel (practically never: LOD meshes are different geometry).
+- Blending on opaque shadow geometry (`blend.shadow`, `blend.dh_shadow` or the per-buffer forms): colour becomes order-dependent.
+  Cache off for such packs (pack checks below).
+- Check DH's original order first: whether `renderLods` runs before or after near terrain in the shadow pass today. If it is already
+  "LODs first", the cache keeps the original order exactly.
+
 **Matrix snapshot, frozen in world space.** The shadow modelview is camera-relative: `ShadowMatrices.createModelViewMatrix` is the
 sun rotation plus `snapModelViewToGrid`, an offset from the camera position within the `shadowIntervalSize` grid, and vertices in the
 shadow pass and in gbuffers are camera-relative too. Keeping the refresh frame's literal matrix while the player moves would offset
@@ -143,6 +154,8 @@ normal clear would leave them.
   `imageStore`, `imageAtomic*` or atomic counters. Conservative and static; near shadow programs are unaffected (they run every frame).
 - A `shadowcolorN` that `dh_shadow` writes has `shadowcolorNClear = false` (the pack wants it kept between frames; the copy would
   overwrite it).
+- Blending enabled for opaque shadow geometry (`blend.shadow`, `blend.dh_shadow` or per-buffer blend directives for them): colour
+  would depend on draw order (see "Opaque draw order").
 - Per-pack opt-out list in our config, as a safety valve if a pack shows visible stepping.
 
 **Accepted lag, logged rather than blocked.** The source scan logs these for the pack's `dh_shadow`; they are checked visually, not
@@ -155,9 +168,21 @@ branches):
 - Live-camera uniforms in `dh_shadow` (`cameraPosition`, `gbufferModelView`, `eyePosition`, `relativeEyePosition`) beyond coordinate
   reconstruction, e.g. an overdraw cutout discarding LODs within `far - 32` of the player (like Bliss's `DH_solid`): in the cached map
   the hole stays where it was on the refresh frame, so a moving player could see a band of missing or doubled shadow a few blocks wide
-  at the chunk/LOD seam for up to N frames. Shadow distortion (Bliss's log distortion, radial bends) is computed from shadow-space
-  coordinates around the shadow origin and stays consistent with the snapshot. Bliss is the only tested pack with `dh_shadow`: read
-  its source when implementing and test the seam while moving fast.
+  at the chunk/LOD seam for up to N frames (see "Camera-dependent overdraw cutoff"). Shadow distortion (Bliss's log distortion,
+  radial bends) is computed from shadow-space coordinates around the shadow origin and stays consistent with the snapshot. Bliss is
+  the only tested pack with `dh_shadow`: read its source when implementing.
+
+**Camera-dependent overdraw cutoff (user concern, 2026-11-24).** If the cached LOD shadows contain a camera-relative exclusion zone,
+near geometry moving into or out of that zone could briefly lose its shadow. Between refreshes the cached hole sits a little behind
+the player: on the side the player moves towards, LOD and chunk shadows both exist for a moment (depth takes the nearest, nothing
+visible changes); on the side the player moves away from, the pack's overlap between near chunks and LODs covers the lag. Missing
+shadows need the player to move further within one window than that overlap: Bliss's margin is 32 blocks (`far - 32`), elytra
+flight covers about 2 blocks per 4-frame window at 60 FPS. Risky moments: crossing a chunk boundary (the loaded area shifts by up to
+16 blocks at once) and vertical flight with a sphere-shaped cutout. Tests (user): walking and sprinting across chunk boundaries;
+flying vertically across the vanilla-to-LOD transition; fast elytra flight; moving around tall structures with long shadows. If the
+seam shows: a movement-based refresh threshold (refresh when the camera has moved more than a fraction of the overlap since the
+snapshot), applied only to packs whose `dh_shadow` uses camera uniforms (the source scan logs that), so other packs keep the saving
+during travel. Costs performance only during fast travel.
 
 **OpenGL state.** The refresh draw sits inside the shadow pass, where Iris already sets up and restores shadow state, and binds the
 cache framebuffer the same way `DhFrameBufferWrapper` binds the shadow framebuffer today. Afterwards restore: draw and read
@@ -165,11 +190,29 @@ framebuffer, viewport, draw buffers, depth test/func/mask, blend, colour mask, c
 `RenderSystem`/`GlStateManager`: raw GL calls desync Minecraft's cached state and cause bugs frames later. The copy
 (`glCopyImageSubData`) changes no binding state.
 
+**Transactional refresh (user, 2026-11-24).** A refresh that fails or is interrupted must never leave partial shadow data that later
+frames reuse.
+- Clear the cache's valid flag when a refresh starts; set it only after the opaque LOD draw has finished without an exception, with
+  state restored in a `try/finally`. No GPU fence is needed: later copies are ordered after the draw in the same GL context.
+- While the cache is not valid, the frame uses today's path (normal clear, DH draws opaque LODs straight into the shadow map) and the
+  next frame retries the refresh.
+- Also invalidate on pipeline destroy, resize/reallocation of shadow targets, or any exception during the shadow pass.
+- "DH did not run" vs "nothing to draw": DH sometimes skips drawing entirely (world loading, DH not ready). That must not produce an
+  empty cache marked valid (LOD shadows would vanish for a window), while "DH ran but culling removed every section" is a valid empty
+  cache. Detect that DH actually ran, e.g. count `dh_shadow` program binds during the refresh or check that DH's before-render
+  event fired. Open question for when we read DH's render flow.
+
 **Costs and risks.**
 - VRAM: one cached depth texture plus the cached colour attachments at the shadow resolution: about 64 MB per 32-bit target at 4096
   (so roughly 64-192 MB). Allocate only while the option is above 1; free on pipeline destroy. Say so in the tooltip.
-- Frame pacing: the per-frame copy cannot be avoided (each frame needs a clean LOD-only base before near geometry). It replaces the
-  clear, so the extra cost is roughly one read of the shadow targets, estimated 0.1-0.5 ms at 4096. Refresh frames are therefore
+- Memory bandwidth (user, 2026-11-24): the copy reads and writes every cached target, competing with the shader passes. A 4096
+  target is 64 MB, so 128 MB moved per target per frame; depth plus two colour targets is about 384 MB per frame, about 23 GB/s at
+  60 FPS and about 55 GB/s at 144 FPS, a real share of a laptop GPU's bandwidth. Copy only the attachments `dh_shadow` writes.
+  Modern GPUs make clears nearly free (fast clear / depth compression set metadata), so replacing the clear saves almost nothing.
+  A copied depth buffer may also lose its compression and hierarchical-Z state, so the near pass depth-tests a bit slower: a hidden
+  cost that shows up in `SHADOW`, not in the copy's own timing.
+- Frame pacing: the per-frame copy cannot be avoided (each frame needs a clean LOD-only base before near geometry). Estimated
+  0.1-0.5 ms at 4096 plus the hidden cost above. Refresh frames are therefore
   slightly slower than today (today + the copy); other frames are today minus the opaque LOD shadow cost. Average FPS rises; 1% lows
   can get slightly worse, which can feel like a faint regular stutter. v2 idea, not in the first version: spread the refresh over the
   N frames by using `DhShadowCullingFrustum` to draw 1/N of the LOD sections per frame into a second (double-buffered) cache,
@@ -181,19 +224,23 @@ returns it to 1.
 **Measure first, then predict (cost model: user, 2026-11-24).** Before writing code: `PassTiming` overlay at a low sun, render
 distance 4, DH 128 chunks, Bliss DH shadowmap, same spot, comparing `SHADOW` and `DH_SHADOW` (split into opaque and water), plus a
 one-off timing of the copy. That predicts the result for every N before anything is built:
-- Average saving per frame: `S = C_opaque * (1 - 1/N) - C_copy,net`. Today pays `C_opaque` every frame; the cache pays it once per
-  window plus the copy every frame. LOD water and near shadows cost the same either way, so they drop out.
-- `C_copy,net ≈ C_copy - C_clear + C_clear/N`: the copy replaces the clear of the real targets, but the cache is cleared on refresh
-  frames. Using plain `C_copy` is slightly pessimistic (the safe direction).
-- Refresh-frame penalty: `P ≈ C_copy,net`, how much slower a refresh frame is than today. `S` predicts average FPS, `P` the 1% lows.
+- Average saving per frame: `S = C_opaque * (1 - 1/N) - C_copy - C_side`. Today pays `C_opaque` every frame; the cache pays it once
+  per window plus the copy every frame. LOD water and near shadows cost the same either way, so they drop out.
+- `C_copy`: the copy's own time. Clears are nearly free on modern GPUs, so no credit for the clear it replaces (an earlier
+  `C_copy,net = C_copy - C_clear + C_clear/N` refinement was dropped, 2026-11-24).
+- `C_side`: indirect costs of the copy's bandwidth (lost depth compression / hierarchical Z, cache pollution) that land in other
+  passes, mostly the near shadow pass. Unknown until built, so the formula with `C_side = 0` is an upper bound.
+- Refresh-frame penalty: `P ≈ C_copy + C_side`, how much slower a refresh frame is than today. `S` predicts average FPS, `P` the
+  1% lows.
 - Compute `S` separately for CPU and GPU (the overlay shows both). The copy is almost all GPU, so the CPU saving is close to
   `C_opaque,cpu * (1 - 1/N)`. The frame only gets faster on the side that is the bottleneck.
 - Break-even: `S > 0` when `C_opaque > C_copy * N / (N - 1)`, i.e. 2x the copy at N=2, 1.5x at N=3, 1.33x at N=4.
 - Diminishing returns, e.g. `C_opaque = 3 ms`, `C_copy = 0.3 ms`: N=2 1.2 ms, N=3 1.7 ms, N=4 1.95 ms, N=8 2.3 ms. Going past 4 adds
   little while the lag keeps growing, which is why N stops at 4.
 
-Build it only if the predicted `S` is worth having at the user's settings. Once built, time the copy as its own pass and check
-the A/B results against the formula, comparing 1% lows, not just averages. Optional: while the option is at 1, the timing overlay
+Build it only if the predicted `S` is worth having at the user's settings. Once built, time the copy as its own pass, but confirm
+`S` from the whole shadow pass (`SHADOW` + `DH_SHADOW` + copy) and frame time, not by adding up the separate pass timings (that misses
+`C_side`). Compare 1% lows, not just averages. Optional: while the option is at 1, the timing overlay
 shows the predicted `S` and `P` live from the measured values, so a player can see whether turning it on would help at that spot.
 
 **Tests.**
@@ -201,9 +248,11 @@ shows the predicted `S` and `P` live from the measured values, so a player can s
    screenshots from the same spot must be pixel-identical apart from noise. This checks the copy, clear values, formats and state
    restore together.
 2. A/B N=1..4: opaque/water `DH_SHADOW`, the copy, frame time (average and 1% lows).
-3. Motion and events: fly ~25 blocks up so the ground below is LODs; look for a seam between near and LOD shadows; move fast
-   (elytra) and watch the chunk/LOD seam; sunrise/sunset switch; `/time set`; teleport; pack switch; shader-option change; DH
-   render distance change.
+3. Motion (user, 2026-11-24): walking and sprinting across chunk boundaries; flying vertically across the vanilla-to-LOD transition
+   (and ~25 blocks up so the ground below is LODs); fast elytra flight; moving around tall structures with long shadows. Watch the
+   chunk/LOD seam for missing or doubled shadows.
+4. Events: sunrise/sunset switch; `/time set`; teleport; pack switch; shader-option change; DH render distance change; world load
+   (DH not ready yet: LOD shadows must not vanish, see "Transactional refresh").
 
 ## Not porting
 
