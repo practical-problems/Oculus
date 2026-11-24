@@ -23,7 +23,9 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
   feature flag; never define `IRIS_VERSION` as 1.7.
 - Experimental (Emberlens) work: every optimization defaults to off; all off = the tested DH baseline (new path behind an `if` on a
   static flag, old code untouched); correctness fixes are separate commits and always on; no Emberbium dependency; keep Oculus
-  Flywheel Compat working; measure CPU and GPU time separately, in ms.
+  Flywheel Compat working; measure CPU and GPU time separately, in ms. Keep the original method shape even with the option
+  off (same locals in scope, no extra calls of targets the method already uses; new paths go in helper methods), so other
+  mods' mixins still match: see "Method shape rule" in `BACKPORT_CANDIDATES.md`.
 - This sandbox cannot compile Minecraft code (no Minecraft/Forge jars, Maven blocked). The user's Gradle build or CI is the check.
 - GitHub: branch pushes work from the sandbox; tag pushes are refused (403), so the user pushes tags. Leave branch housekeeping alone.
 
