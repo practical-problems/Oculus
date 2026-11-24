@@ -76,4 +76,5 @@ Notes for future sessions. Read this first. The full day-by-day history up to 20
 
 ## Pointers
 `README.md` (users, pack table, credits) · `TEST_RESULTS.md` (all measurements) · `BACKPORT_CANDIDATES.md` (Emberlens list, Flywheel
-plan, batch 2 requirements) · `IDEAS.md` (dev) · `claudeOld/` (full history).
+plan, batch 2 requirements) · `IDEAS.md` (dev) · `claudeOld/`: `CLAUDE-20261123-2157-QUICK.md` (fast catch-up on the history), `-RESULT.md` (its test results),
+and the full snapshot.
