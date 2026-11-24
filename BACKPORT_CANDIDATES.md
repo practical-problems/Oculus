@@ -102,6 +102,19 @@ before the test). Where order does matter:
 - Check DH's original order first: whether `renderLods` runs before or after near terrain in the shadow pass today. If it is already
   "LODs first", the cache keeps the original order exactly.
 
+Depth-testing assumptions (user, 2026-11-24): the argument above only holds when both paths use compatible depth functions and have
+depth writes on. Inspect before assuming order independence (not automatically incompatible):
+- Depth writes disabled for any opaque shadow draw (its fragments then neither occlude nor get occluded consistently).
+- Unusual depth functions (anything other than `LESS`/`LEQUAL`, e.g. `GREATER`, `ALWAYS`, `EQUAL`).
+- Programs that write `gl_FragDepth` (still order-independent if test and write stay on, but worth reading; also disables early-Z).
+- Colour write masks or draw buffers that leave an attachment untouched. Concrete case: `dh_shadow` writes depth but not
+  `shadowcolor1`, while near shadow programs do. Original order with LODs drawn after near geometry: a nearer LOD fragment replaces the
+  depth but `shadowcolor1` keeps the near block's value. Cache order: the near fragment fails the depth test, so `shadowcolor1` keeps
+  the cleared value. Compare the `DRAWBUFFERS`/`RENDERTARGETS` of `dh_shadow` with the near shadow programs.
+Two layers of checking: static (pack directives and shader source, at pipeline build) and a one-time runtime check of the actual GL
+state (depth func, depth mask, colour masks, draw buffers) during the first refresh of a pipeline. `glGet*` is a sync point, so only
+once, then cached.
+
 **Matrix snapshot, frozen in world space.** The shadow modelview is camera-relative: `ShadowMatrices.createModelViewMatrix` is the
 sun rotation plus `snapModelViewToGrid`, an offset from the camera position within the `shadowIntervalSize` grid, and vertices in the
 shadow pass and in gbuffers are camera-relative too. Keeping the refresh frame's literal matrix while the player moves would offset
@@ -156,6 +169,8 @@ normal clear would leave them.
   overwrite it).
 - Blending enabled for opaque shadow geometry (`blend.shadow`, `blend.dh_shadow` or per-buffer blend directives for them): colour
   would depend on draw order (see "Opaque draw order").
+- A depth-testing assumption that fails on inspection (see "Depth-testing assumptions"): depth writes off, an unusual depth function,
+  or `dh_shadow` leaving a colour attachment untouched that near shadow programs write. `gl_FragDepth` alone is logged, not blocked.
 - Per-pack opt-out list in our config, as a safety valve if a pack shows visible stepping.
 
 **Accepted lag, logged rather than blocked.** The source scan logs these for the pack's `dh_shadow`; they are checked visually, not
@@ -192,15 +207,30 @@ framebuffer, viewport, draw buffers, depth test/func/mask, blend, colour mask, c
 
 **Transactional refresh (user, 2026-11-24).** A refresh that fails or is interrupted must never leave partial shadow data that later
 frames reuse.
-- Clear the cache's valid flag when a refresh starts; set it only after the opaque LOD draw has finished without an exception, with
-  state restored in a `try/finally`. No GPU fence is needed: later copies are ordered after the draw in the same GL context.
-- While the cache is not valid, the frame uses today's path (normal clear, DH draws opaque LODs straight into the shadow map) and the
-  next frame retries the refresh.
-- Also invalidate on pipeline destroy, resize/reallocation of shadow targets, or any exception during the shadow pass.
-- "DH did not run" vs "nothing to draw": DH sometimes skips drawing entirely (world loading, DH not ready). That must not produce an
-  empty cache marked valid (LOD shadows would vanish for a window), while "DH ran but culling removed every section" is a valid empty
-  cache. Detect that DH actually ran, e.g. count `dh_shadow` program binds during the refresh or check that DH's before-render
-  event fired. Open question for when we read DH's render flow.
+- Three states (user): `INVALID`, `REFRESHING`, `VALID`. A refresh moves `INVALID`/`VALID` -> `REFRESHING`; only a refresh that
+  completes moves to `VALID`; anything else goes back to `INVALID`. `REFRESHING` also guards against re-entry (a nested shadow pass
+  or a second refresh in the same frame).
+- `VALID` only after both: DH has completed the opaque LOD rendering path, and OpenGL state has been restored (in a `try/finally`).
+  No GPU fence is needed: later copies are ordered after the draw in the same GL context.
+- Completion needs an explicit signal from DH's render path (user). Not program-bind counting (a program can be bound without
+  submitting geometry) and not a before-render event (it does not show that rendering finished). Candidates to check in DH 3.3.3:
+  an after-render API event if DH has one for this path, or our own mixin at the end of DH's opaque LOD render method, after its
+  draw loop and placed so DH's early returns (not ready, nothing loaded) skip it. Then "DH ran, culling removed every section" still
+  reaches the signal (a valid empty cache), and "DH did not run" does not (stays `INVALID`, so LOD shadows never vanish for a window).
+- While the cache is not `VALID`, the frame uses today's path (normal clear, DH draws opaque LODs straight into the shadow map).
+- Also `INVALID` on pipeline destroy, resize/reallocation of shadow targets, or any exception during the shadow pass.
+
+**Failure handling: never a recurring penalty (user, 2026-11-24).** A refresh that keeps failing must not cost more than today's path.
+Classify why a refresh did not complete:
+- DH temporarily not ready (world loading, DH starting): use today's path and retry next frame. Check readiness before clearing the
+  cache or starting a refresh, so a not-ready frame costs exactly what it costs today.
+- Cache allocation or framebuffer failure (`GL_OUT_OF_MEMORY` on allocation, incomplete framebuffer status): disable caching for the
+  current pipeline and log the reason once; a new pipeline (pack reload, option change, dimension change) tries again.
+- Unsupported pack behaviour (pack checks above, static or the one-time runtime check): disable caching until the pack or its options
+  change, log once.
+- Unexplained failures (exception during the refresh, completion signal never reached while DH is ready): retry a few times (e.g. 3
+  in a row), then disable for the current pipeline and log.
+In every case the frame itself renders with today's path, so the worst case is today's cost plus at most a few wasted attempts.
 
 **Costs and risks.**
 - VRAM: one cached depth texture plus the cached colour attachments at the shadow resolution: about 64 MB per 32-bit target at 4096
@@ -229,13 +259,16 @@ one-off timing of the copy. That predicts the result for every N before anything
 - `C_copy`: the copy's own time. Clears are nearly free on modern GPUs, so no credit for the clear it replaces (an earlier
   `C_copy,net = C_copy - C_clear + C_clear/N` refinement was dropped, 2026-11-24).
 - `C_side`: indirect costs of the copy's bandwidth (lost depth compression / hierarchical Z, cache pollution) that land in other
-  passes, mostly the near shadow pass. Unknown until built, so the formula with `C_side = 0` is an upper bound.
+  passes, mostly the near shadow pass. Unknown until built, so the formula with `C_side = 0` is an upper bound. Once built, measure
+  it as the increase in near-pass `SHADOW` time with the copy versus today's path at the same spot, and use that measured value in the
+  break-even, `P` and the optional live prediction.
 - Refresh-frame penalty: `P ≈ C_copy + C_side`, how much slower a refresh frame is than today. `S` predicts average FPS, `P` the
   1% lows.
 - Compute `S` separately for CPU and GPU (the overlay shows both). The copy is almost all GPU, so the CPU saving is close to
   `C_opaque,cpu * (1 - 1/N)`. The frame only gets faster on the side that is the bottleneck.
-- Break-even: `S > 0` when `C_opaque > C_copy * N / (N - 1)`, i.e. 2x the copy at N=2, 1.5x at N=3, 1.33x at N=4.
-- Diminishing returns, e.g. `C_opaque = 3 ms`, `C_copy = 0.3 ms`: N=2 1.2 ms, N=3 1.7 ms, N=4 1.95 ms, N=8 2.3 ms. Going past 4 adds
+- Break-even: `S > 0` when `C_opaque > (C_copy + C_side) * N / (N - 1)`, i.e. 2x the copy's total cost at N=2, 1.5x at N=3, 1.33x
+  at N=4.
+- Diminishing returns, e.g. `C_opaque = 3 ms`, `C_copy + C_side = 0.3 ms`: N=2 1.2 ms, N=3 1.7 ms, N=4 1.95 ms, N=8 2.3 ms. Going past 4 adds
   little while the lag keeps growing, which is why N stops at 4.
 
 Build it only if the predicted `S` is worth having at the user's settings. Once built, time the copy as its own pass, but confirm
