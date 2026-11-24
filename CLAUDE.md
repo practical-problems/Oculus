@@ -170,7 +170,7 @@ Phases 1 and 2 (depth texture, uniforms, macros, `dh_terrain`/`dh_water`) are do
 Do not port the whole Iris 1.7 refactor (package `net.irisshaders`). Port only DH pieces, adapted to `net.coderbot.iris` classes.
 See `DH_BACKPORT_PLAN.md` ideas: every DH class real 1.8.0 imports exists in DH 3.3.3, so its DH-facing code is API-compatible.
 
-Unplanned ideas (modern OpenGL experiment branch, pack compatibility readout, etc.) are in `IDEAS.md`.
+Unplanned ideas (modern OpenGL experiment branch, pack compatibility readout, etc.) are in `IDEAS.md` on the dev branch only.
 Non-DH ports from other forks (Emberlens so far) are tracked in `BACKPORT_CANDIDATES.md`, only ones that work with stock
 Embeddium/Rubidium (not Emberbium). Update its Status column when one is ported or tested.
 
