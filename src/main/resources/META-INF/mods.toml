@@ -6,7 +6,7 @@ modId="oculus"
 version="${version}"
 displayName="Spectacles"
 logoFile="oculus-logo.png"
-authors="practical-problems (Spectacles); Oculus by Asek3; Iris by coderbot, IMS212, Justsnoopy30, FoundationGames"
+authors="practical-problems (Spectacles); Teqed, PolarBearEs, fangyu-mc, KostromDan, Askadar, shuttheirprayer (forks it builds on); Oculus by Asek3; Iris by coderbot, IMS212, Justsnoopy30, FoundationGames"
 credits="Based on Teqed's Oculus 1.19.2 branch and Asek3's Oculus. DH integration from PolarBearEs and fangyu-mc. Mekanism and Flywheel fixes from KostromDan (Mekalus). DH version spoof by Askadar. Experimental optimizations from shuttheirprayer (Emberlens)."
 description='''
 Spectacles: a Distant Horizons-focused fork of Oculus (the Forge port of Iris) for Minecraft 1.19.2.
