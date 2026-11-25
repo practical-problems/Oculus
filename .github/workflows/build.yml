@@ -1,7 +1,7 @@
 name: Build
 
-# Builds the Spectacles jar on every push to the stable and dev branches, and on demand.
-# Pushing a tag like v1.0.0 also creates a draft GitHub release with the jar attached.
+# Builds the Spectacles jar on pushes to the stable and dev branches (skipped when a push only changes docs), and on demand.
+# Pushing a tag like v1.0.0 also creates a draft GitHub release with the jar attached (path filters do not apply to tags).
 on:
   push:
     branches:
@@ -9,6 +9,10 @@ on:
       - dh-3.3.3-mekanism-dev
     tags:
       - 'v*'
+    paths-ignore:
+      - 'doc/**'
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
 
 permissions:
